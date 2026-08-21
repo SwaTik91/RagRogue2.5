@@ -3,6 +3,13 @@ extends CharacterBody2D
 const EDITOR_FEATURE := "editor"
 
 var move_speed: float = CombatStats.MOVE_SPEED
+var hp: float = 1.0
+var hp_max: float = 1.0
+var atk: int = 1
+var defense: int = 1
+var class_id: int = ClassId.Value.SWORDMAN
+var skills: Array = []
+var cds: Dictionary = {}
 var _move_vector: Vector2 = Vector2.ZERO
 var _stick: Node = null
 
@@ -18,6 +25,18 @@ func bind_hero(hero: Hero) -> void:
 		return
 	var stats := CombatStats.from_hero(hero)
 	move_speed = float(stats.move_speed)
+	atk = int(stats.atk)
+	defense = int(stats.def)
+	hp_max = float(stats.hp_max)
+	hp = hp_max
+	class_id = hero.class_id
+	skills = _load_class_skills(hero)
+	cds.clear()
+
+
+func to_combatant() -> Dictionary:
+	var pos := global_position if is_inside_tree() else position
+	return {"pos": pos, "hp": hp}
 
 
 func set_move_vector(v: Vector2) -> void:
@@ -90,6 +109,29 @@ func _bind_active_hero() -> void:
 	var hero = session.active_hero()
 	if hero is Hero:
 		bind_hero(hero)
+
+
+func _load_class_skills(hero: Hero) -> Array:
+	var loaded: Array = []
+	var file := FileAccess.open("res://data/skills.json", FileAccess.READ)
+	if file == null:
+		return loaded
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not (parsed is Array):
+		return loaded
+	var allowed: Dictionary = {}
+	for sid in hero.skill_ids:
+		allowed[str(sid)] = true
+	for item in parsed:
+		if not (item is Dictionary):
+			continue
+		if int(item.get("class_id", -1)) != hero.class_id:
+			continue
+		var sid := str(item.get("id", ""))
+		if not allowed.is_empty() and not allowed.has(sid):
+			continue
+		loaded.append(SkillDef.from_dict(item))
+	return loaded
 
 
 func _make_camera_current() -> void:

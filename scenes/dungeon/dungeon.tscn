@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
+[ext_resource type="Script" path="res://scripts/dungeon/dungeon_controller.gd" id="1_dc"]
 [ext_resource type="PackedScene" path="res://scenes/dungeon/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_stick.tscn" id="2_stick"]
+[ext_resource type="Script" path="res://scripts/dungeon/combat_director.gd" id="3_cd"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(4080, 80)
@@ -10,6 +12,7 @@ size = Vector2(4080, 80)
 size = Vector2(80, 2640)
 
 [node name="Dungeon" type="Node2D"]
+script = ExtResource("1_dc")
 
 [node name="Floor" type="Polygon2D" parent="."]
 color = Color(0.16, 0.2, 0.18, 1)
@@ -53,8 +56,32 @@ shape = SubResource("WallV")
 position = Vector2(2000, 0)
 shape = SubResource("WallV")
 
+[node name="Enemies" type="Node2D" parent="."]
+
 [node name="Player" parent="." instance=ExtResource("1_player")]
 
+[node name="CombatDirector" type="Node" parent="."]
+script = ExtResource("3_cd")
+
 [node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="HpLabel" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 280.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 22
+text = "HP --/--"
+
+[node name="BannerLabel" type="Label" parent="HUD"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -220.0
+offset_top = 16.0
+offset_right = 220.0
+offset_bottom = 52.0
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
 
 [node name="VirtualStick" parent="HUD" instance=ExtResource("2_stick")]

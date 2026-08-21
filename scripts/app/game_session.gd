@@ -7,6 +7,7 @@ var account: Dictionary = {}
 var active_class: int = ClassId.Value.SWORDMAN
 var run: RunState = RunState.new()
 var save_path: String = DEFAULT_SAVE_PATH
+var pending_toast: String = ""
 
 var _heroes: Array = []
 
@@ -43,3 +44,9 @@ func start_run() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	run.start_act(rng)
+
+
+func apply_defeat() -> void:
+	RewardResolver.apply_death(active_hero(), run)
+	pending_toast = "Поражение"
+	persist()
