@@ -3,6 +3,7 @@ extends SceneTree
 func _init() -> void:
 	var failed := 0
 	failed += _run("res://scripts/tests/test_smoke.gd")
+	failed += _run("res://scripts/tests/test_hero.gd")
 	quit(1 if failed > 0 else 0)
 
 func _run(path: String) -> int:
