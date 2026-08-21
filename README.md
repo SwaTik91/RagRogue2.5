@@ -63,12 +63,25 @@ godot --headless --path . --export-debug Android build/ragrogue-debug.apk
 
 ### Blocker in this environment (2026-08-21)
 
-A debug APK **cannot** be produced on this Cloud Agent VM. Both required pieces are missing:
+A debug APK **cannot** be produced on this Cloud Agent VM. Headless export was attempted and failed (`EXIT:1`) with Godot’s own checklist:
 
-- **Android SDK:** `ANDROID_HOME` / `ANDROID_SDK_ROOT` unset; Editor Settings `export/android/android_sdk_path` and `export/android/java_sdk_path` are empty. No SDK tree under `/opt`, `/usr`, or `$HOME`.
-- **Export templates:** `~/.local/share/godot/export_templates/` exists but has **no** `4.3.stable` (or any) template pack.
+```text
+godot --headless --path . --export-debug Android /tmp/ragrogue-export/ragrogue-debug.apk
 
-Install the 4.3.stable Android export templates and an Android SDK + JDK on a machine that has them, set the two editor paths, then rerun the command above. This gap does not block the listing drafts or the preset file.
+ERROR: Cannot export project with preset "Android" due to configuration errors:
+No export template found at the expected path:
+/home/ubuntu/.local/share/godot/export_templates/4.3.stable/android_debug.apk
+No export template found at the expected path:
+/home/ubuntu/.local/share/godot/export_templates/4.3.stable/android_release.apk
+Debug keystore not configured in the Editor Settings nor in the preset.
+A valid Java SDK path is required in Editor Settings.
+A valid Android SDK path is required in Editor Settings.
+ERROR: Project export for preset "Android" failed.
+```
+
+`ANDROID_HOME` / `ANDROID_SDK_ROOT` are unset; Editor Settings `export/android/android_sdk_path` and `export/android/java_sdk_path` are empty. `~/.local/share/godot/export_templates/` has no `4.3.stable` pack.
+
+Install the 4.3.stable Android export templates, a JDK, and an Android SDK on a machine that has them; set the editor SDK paths and a debug keystore; then rerun the export command. This gap does not block the listing drafts or the preset file.
 
 ## Layout
 
