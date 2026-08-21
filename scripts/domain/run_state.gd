@@ -30,6 +30,11 @@ func apply_upgrade(upgrade_id: String) -> void:
 	modifiers.append(upgrade_id)
 
 
+func on_death() -> void:
+	alive = false
+	modifiers.clear()
+
+
 func on_room_cleared() -> void:
 	if room_index >= 0 and room_index < rooms.size():
 		var room: Dictionary = rooms[room_index]
