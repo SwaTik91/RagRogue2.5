@@ -1,0 +1,24 @@
+; project.godot
+config_version=5
+
+[application]
+
+config/name="RagRogue"
+run/main_scene="res://scenes/hub/hub.tscn"
+config/features=PackedStringArray("4.3")
+; Enable when assets/branding/icon.png exists (Ludo AI drop):
+config/icon="res://assets/branding/icon.png"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/handheld/orientation=4
+
+[autoload]
+
+GameSession="*res://scripts/app/game_session.gd"
+
+[rendering]
+textures/vram_compression/import_etc2_astc=true

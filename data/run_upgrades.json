@@ -1,0 +1,5 @@
+[
+  {"id": "atk_up", "name": "Sharpened Focus", "atk_bonus": 2},
+  {"id": "hp_up", "name": "Vital Charm", "hp_bonus": 10},
+  {"id": "cdr", "name": "Quick Chant", "cdr_bonus": 0.1}
+]

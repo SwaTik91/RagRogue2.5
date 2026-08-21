@@ -1,0 +1,5 @@
+[
+  {"id": "cave_slime", "name": "Cave Slime", "tier": 1, "hp": 20, "atk": 3, "def": 0},
+  {"id": "stone_beetle", "name": "Stone Beetle", "tier": 2, "hp": 35, "atk": 5, "def": 2},
+  {"id": "act_boss", "name": "Vault Warden", "tier": 5, "hp": 120, "atk": 8, "def": 3}
+]

@@ -1,0 +1,13 @@
+# Godot 4 generated (keep class_name cache so headless tests resolve ClassId)
+.godot/*
+!.godot/global_script_class_cache.cfg
+*.translation
+
+# Local / environment
+godot.zip
+*.apk
+*.aab
+
+# Regenerated via: godot --install-android-build-template
+android/
+build/
