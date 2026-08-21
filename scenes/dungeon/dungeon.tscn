@@ -1,8 +1,60 @@
-[gd_scene format=3]
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/dungeon/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/virtual_stick.tscn" id="2_stick"]
+
+[sub_resource type="RectangleShape2D" id="WallH"]
+size = Vector2(4080, 80)
+
+[sub_resource type="RectangleShape2D" id="WallV"]
+size = Vector2(80, 2640)
 
 [node name="Dungeon" type="Node2D"]
 
-[node name="Label" type="Label" parent="."]
-offset_right = 200.0
-offset_bottom = 40.0
-text = "Dungeon"
+[node name="Floor" type="Polygon2D" parent="."]
+color = Color(0.16, 0.2, 0.18, 1)
+polygon = PackedVector2Array(-1960, -1240, 1960, -1240, 1960, 1240, -1960, 1240)
+
+[node name="LandmarkN" type="Polygon2D" parent="."]
+position = Vector2(0, -420)
+color = Color(0.28, 0.36, 0.3, 1)
+polygon = PackedVector2Array(-48, -48, 48, -48, 48, 48, -48, 48)
+
+[node name="LandmarkE" type="Polygon2D" parent="."]
+position = Vector2(520, 0)
+color = Color(0.32, 0.3, 0.22, 1)
+polygon = PackedVector2Array(-36, -36, 36, -36, 36, 36, -36, 36)
+
+[node name="LandmarkS" type="Polygon2D" parent="."]
+position = Vector2(0, 420)
+color = Color(0.24, 0.3, 0.34, 1)
+polygon = PackedVector2Array(-48, -48, 48, -48, 48, 48, -48, 48)
+
+[node name="LandmarkW" type="Polygon2D" parent="."]
+position = Vector2(-520, 0)
+color = Color(0.34, 0.26, 0.28, 1)
+polygon = PackedVector2Array(-36, -36, 36, -36, 36, 36, -36, 36)
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="North" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, -1280)
+shape = SubResource("WallH")
+
+[node name="South" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, 1280)
+shape = SubResource("WallH")
+
+[node name="West" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-2000, 0)
+shape = SubResource("WallV")
+
+[node name="East" type="CollisionShape2D" parent="Walls"]
+position = Vector2(2000, 0)
+shape = SubResource("WallV")
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="VirtualStick" parent="HUD" instance=ExtResource("2_stick")]
