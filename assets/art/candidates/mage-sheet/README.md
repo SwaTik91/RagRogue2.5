@@ -1,4 +1,5 @@
-# Stage 2 — Mage full-body sheet candidates
+# Stage 2 — Mage full-body sheet
 
-Style locked from icon **v2**. Generated via Ludo `generateWithStyle`.
-Pick **v1–v4**. Next: in-game top-down/idle sprite from winner + Swordman sheet.
+**Winner: v3** → locked at `assets/art/characters/mage/sheet.png`.
+
+Candidates v1–v4 kept for reference.
