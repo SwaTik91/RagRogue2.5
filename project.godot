@@ -7,7 +7,7 @@ config/name="RagRogue"
 run/main_scene="res://scenes/hub/hub.tscn"
 config/features=PackedStringArray("4.3")
 ; Enable when assets/branding/icon.png exists (Ludo AI drop):
-; config/icon="res://assets/branding/icon.png"
+config/icon="res://assets/branding/icon.png"
 
 [display]
 
@@ -19,3 +19,6 @@ window/handheld/orientation=4
 [autoload]
 
 GameSession="*res://scripts/app/game_session.gd"
+
+[rendering]
+textures/vram_compression/import_etc2_astc=true

@@ -7,3 +7,7 @@
 godot.zip
 *.apk
 *.aab
+
+# Regenerated via: godot --install-android-build-template
+android/
+build/

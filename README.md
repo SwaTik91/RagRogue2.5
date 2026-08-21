@@ -92,3 +92,16 @@ Install the 4.3.stable Android export templates, a JDK, and an Android SDK on a 
 - `docs/store/` — AppGallery listing, privacy, and Ludo AI media briefs
 - `assets/` — branding + screenshot drop points (`assets/placeholders/README.md`)
 - `export_presets.cfg` — Android landscape export preset
+
+## Debug APK (cloud / CI)
+
+Prerequisites: Godot 4.3, export templates, Android SDK, **JDK 17** (not 21), ETC2/ASTC enabled in project.
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export ANDROID_HOME=$HOME/android-sdk
+godot --headless --path . --install-android-build-template
+godot --headless --path . --export-debug "Android" build/RagRogue-debug.apk
+```
+
+Package: `com.swatik.ragrogue`. APK is gitignored; successful builds may be copied to artifacts.
