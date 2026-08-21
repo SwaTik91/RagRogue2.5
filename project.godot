@@ -4,7 +4,7 @@ config_version=5
 [application]
 
 config/name="RagRogue"
-run/main_scene="res://scenes/boot.tscn"
+run/main_scene="res://scenes/hub/hub.tscn"
 config/features=PackedStringArray("4.3")
 
 [display]

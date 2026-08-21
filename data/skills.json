@@ -1,0 +1,11 @@
+[
+  {"id": "iron_cleave", "name": "Iron Cleave", "class_id": 0, "cooldown": 3.0, "power": 7, "kind": "single"},
+  {"id": "shield_surge", "name": "Shield Surge", "class_id": 0, "cooldown": 6.0, "power": 5, "kind": "aoe"},
+  {"id": "rally_ward", "name": "Rally Ward", "class_id": 0, "cooldown": 8.0, "power": 10, "kind": "heal"},
+  {"id": "flame_spark", "name": "Flame Spark", "class_id": 1, "cooldown": 3.0, "power": 8, "kind": "single"},
+  {"id": "cinder_wave", "name": "Cinder Wave", "class_id": 1, "cooldown": 6.0, "power": 6, "kind": "aoe"},
+  {"id": "ember_soothe", "name": "Ember Soothe", "class_id": 1, "cooldown": 8.0, "power": 12, "kind": "heal"},
+  {"id": "hawk_pin", "name": "Hawk Pin", "class_id": 2, "cooldown": 2.5, "power": 8, "kind": "single"},
+  {"id": "split_flight", "name": "Split Flight", "class_id": 2, "cooldown": 5.5, "power": 6, "kind": "aoe"},
+  {"id": "trail_salve", "name": "Trail Salve", "class_id": 2, "cooldown": 8.0, "power": 11, "kind": "heal"}
+]

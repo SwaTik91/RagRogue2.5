@@ -37,3 +37,9 @@ func persist() -> void:
 	account["version"] = 1
 	account["heroes"] = packed
 	SaveGame.write(save_path, account)
+
+
+func start_run() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	run.start_act(rng)

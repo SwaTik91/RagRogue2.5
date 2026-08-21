@@ -1,0 +1,5 @@
+[
+  {"id": "oak_brand", "name": "Oak Brand", "slot": "weapon", "rarity": 0, "atk_bonus": 2, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "ember_twig", "name": "Ember Twig", "slot": "weapon", "rarity": 0, "atk_bonus": 3, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "ash_recurve", "name": "Ash Recurve", "slot": "weapon", "rarity": 0, "atk_bonus": 2, "def_bonus": 0, "hp_bonus": 0}
+]
