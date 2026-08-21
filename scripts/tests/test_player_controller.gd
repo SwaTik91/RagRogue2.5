@@ -54,6 +54,17 @@ func _test_player_move_api(errors: Array) -> void:
 	for method_name in ["attack", "cast_skill", "fire_skill", "use_skill"]:
 		if player.has_method(method_name):
 			errors.append("PlayerController must not expose attack/skill method " + method_name)
+	if not player.has_method("to_combatant"):
+		errors.append("PlayerController.to_combatant should exist")
+	else:
+		player.hp = 33.0
+		var c: Dictionary = player.to_combatant()
+		if not c.has("pos") or not c.has("hp"):
+			errors.append("player combatant must include {pos, hp}")
+		elif not (c.pos is Vector2):
+			errors.append("player combatant pos must be Vector2")
+		elif not is_equal_approx(float(c.hp), 33.0):
+			errors.append("player combatant hp should match actor hp")
 	player.free()
 
 
