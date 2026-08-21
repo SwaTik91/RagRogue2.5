@@ -10,6 +10,9 @@ func run() -> Array:
 	_wipe_user("test_session_save.json")
 	_test_round_trip_save(errors)
 	_test_game_session_persist(errors)
+	_test_active_class_round_trip(errors)
+	_test_malformed_heroes_recovers(errors)
+	_test_active_hero_clamps(errors)
 	_wipe_user("test_save.json")
 	_wipe_user("test_session_save.json")
 	return errors
@@ -83,3 +86,57 @@ func _test_game_session_persist(errors: Array) -> void:
 	if not hero2.equipped.has("weapon"):
 		errors.append("GameSession.persist should keep equipped gear")
 	session2.free()
+
+
+func _test_active_class_round_trip(errors: Array) -> void:
+	var script: GDScript = load("res://scripts/app/game_session.gd")
+	var session = script.new()
+	session.save_path = SESSION_PATH
+	session.reload()
+	session.active_class = ClassId.Value.ARCHER
+	session.persist()
+	session.free()
+
+	var session2 = script.new()
+	session2.save_path = SESSION_PATH
+	session2.reload()
+	if int(session2.active_class) != ClassId.Value.ARCHER:
+		errors.append("reload should restore active_class Archer, got %s" % session2.active_class)
+	var hero: Hero = session2.active_hero()
+	if hero.class_id != ClassId.Value.ARCHER:
+		errors.append("restored active_hero should be Archer")
+	session2.free()
+
+
+func _test_malformed_heroes_recovers(errors: Array) -> void:
+	var bad := {
+		"version": 1,
+		"heroes": [
+			{"class_id": 0, "level": 1, "xp": 0, "hp_max": 55, "skill_ids": [], "equipped": {}},
+			"not-a-hero",
+			42
+		]
+	}
+	SaveGame.write(SAVE_PATH, bad)
+	var loaded: Dictionary = SaveGame.load_or_create(SAVE_PATH)
+	var heroes = loaded.get("heroes", [])
+	if not (heroes is Array) or heroes.size() != 3:
+		errors.append("malformed heroes should be replaced with 3 default heroes")
+		return
+	for i in heroes.size():
+		if not (heroes[i] is Dictionary):
+			errors.append("recovered heroes[%s] should be a Dictionary" % i)
+
+
+func _test_active_hero_clamps(errors: Array) -> void:
+	var script: GDScript = load("res://scripts/app/game_session.gd")
+	var session = script.new()
+	session.save_path = SESSION_PATH
+	session.reload()
+	session.active_class = 99
+	var hero: Hero = session.active_hero()
+	if hero == null:
+		errors.append("active_hero should clamp instead of OOB")
+	elif hero.class_id < ClassId.Value.SWORDMAN or hero.class_id > ClassId.Value.ARCHER:
+		errors.append("clamped active_hero should be a valid class, got %s" % hero.class_id)
+	session.free()

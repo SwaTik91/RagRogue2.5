@@ -130,6 +130,14 @@ func _bind_active_hero() -> void:
 		bind_hero(hero, modifiers)
 
 
+func capped_skill_ids(unlocked: Array) -> Array:
+	var out: Array = []
+	var limit := mini(4, unlocked.size())
+	for i in limit:
+		out.append(unlocked[i])
+	return out
+
+
 func _load_class_skills(hero: Hero) -> Array:
 	var loaded: Array = []
 	var file := FileAccess.open("res://data/skills.json", FileAccess.READ)
@@ -140,6 +148,7 @@ func _load_class_skills(hero: Hero) -> Array:
 		return loaded
 	var allowed: Dictionary = {}
 	var unlocked: Array = hero.unlocked_skill_ids() if hero.has_method("unlocked_skill_ids") else hero.skill_ids
+	unlocked = capped_skill_ids(unlocked)
 	for sid in unlocked:
 		allowed[str(sid)] = true
 	for item in parsed:

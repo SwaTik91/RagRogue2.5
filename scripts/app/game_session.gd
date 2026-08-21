@@ -23,13 +23,27 @@ func reload() -> void:
 	for d in account.get("heroes", []):
 		if d is Dictionary:
 			_heroes.append(Hero.from_dict(d))
+	if _heroes.size() != 3:
+		account = SaveGame.default_account()
+		_heroes.clear()
+		for d in account.get("heroes", []):
+			if d is Dictionary:
+				_heroes.append(Hero.from_dict(d))
+	active_class = clampi(int(account.get("active_class", ClassId.Value.SWORDMAN)), 0, maxi(0, _heroes.size() - 1))
 	ready_for_play = _heroes.size() == 3
 
 
 func active_hero() -> Hero:
-	if _heroes.is_empty():
+	if _heroes.size() != 3:
 		reload()
-	return _heroes[active_class]
+	if _heroes.is_empty():
+		_heroes = [
+			Hero.new(ClassId.Value.SWORDMAN),
+			Hero.new(ClassId.Value.MAGE),
+			Hero.new(ClassId.Value.ARCHER)
+		]
+	var idx := clampi(int(active_class), 0, _heroes.size() - 1)
+	return _heroes[idx]
 
 
 func persist() -> void:
@@ -37,6 +51,7 @@ func persist() -> void:
 	for hero in _heroes:
 		packed.append(hero.to_dict())
 	account["version"] = 1
+	account["active_class"] = active_class
 	account["heroes"] = packed
 	SaveGame.write(save_path, account)
 
@@ -58,6 +73,9 @@ func apply_victory(rng: RandomNumberGenerator = null) -> void:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	RewardResolver.grant_boss_loot(active_hero(), _load_gear_pool(), rng)
+	if run != null:
+		run.alive = false
+		run.modifiers.clear()
 	pending_toast = "Победа"
 	persist()
 

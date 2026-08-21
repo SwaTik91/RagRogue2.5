@@ -9,8 +9,11 @@ func run() -> Array:
 	_test_debug_short_act_default_false(errors)
 	_test_debug_short_act_builds_one_combat_and_boss(errors)
 	_test_combat_clear_waits_for_upgrade_then_advances(errors)
+	_test_combat_clear_awards_xp(errors)
 	_test_boss_clear_grants_loot_and_victory_toast(errors)
+	_test_victory_ends_run(errors)
 	_test_hub_shows_victory_toast(errors)
+	_test_hub_shows_equip_and_skills(errors)
 	_wipe_user("test_act_clear_save.json")
 	return errors
 
@@ -116,6 +119,42 @@ func _test_combat_clear_waits_for_upgrade_then_advances(errors: Array) -> void:
 	session.free()
 
 
+func _test_combat_clear_awards_xp(errors: Array) -> void:
+	var controller = _make_controller()
+	if controller == null:
+		errors.append("DungeonController script missing")
+		return
+	var session = _make_session()
+	session.active_class = ClassId.Value.MAGE
+	var hero: Hero = session.active_hero()
+	var xp_before := hero.xp
+	var level_before := hero.level
+	session.start_run()
+	session.run.rooms = [
+		{"type": RoomType.Value.COMBAT, "monster_ids": ["cave_slime", "stone_beetle"], "cleared": false}
+	]
+	session.run.room_index = 0
+	session.run.floor_index = 0
+	if not controller.has_method("handle_combat_clear"):
+		errors.append("DungeonController.handle_combat_clear should exist")
+		controller.free()
+		session.free()
+		return
+	controller.handle_combat_clear(session)
+	# cave_slime tier 1 + stone_beetle tier 2 => 30 XP
+	if hero.xp != xp_before + 30 and not (hero.level > level_before):
+		errors.append("combat clear should award XP for spawned tiers, xp=%s level=%s" % [hero.xp, hero.level])
+	controller.free()
+	session.free()
+
+	var session2 = _make_session()
+	session2.active_class = ClassId.Value.MAGE
+	var hero2: Hero = session2.active_hero()
+	if hero2.xp < 30 and hero2.level <= 1:
+		errors.append("persist after combat clear should keep awarded XP, xp=%s level=%s" % [hero2.xp, hero2.level])
+	session2.free()
+
+
 func _test_boss_clear_grants_loot_and_victory_toast(errors: Array) -> void:
 	var controller = _make_controller()
 	if controller == null:
@@ -177,6 +216,26 @@ func _test_boss_clear_grants_loot_and_victory_toast(errors: Array) -> void:
 	session2.free()
 
 
+func _test_victory_ends_run(errors: Array) -> void:
+	var session = _make_session()
+	if not session.has_method("apply_victory"):
+		errors.append("GameSession.apply_victory should exist")
+		session.free()
+		return
+	session.start_run()
+	session.run.apply_upgrade("atk_up")
+	if session.run.modifiers.is_empty():
+		errors.append("precondition: atk_up should be on the run")
+		session.free()
+		return
+	session.apply_victory()
+	if session.run.alive:
+		errors.append("apply_victory should set run.alive = false")
+	if session.run.modifiers.size() != 0:
+		errors.append("apply_victory should clear run modifiers, got %s" % str(session.run.modifiers))
+	session.free()
+
+
 func _test_hub_shows_victory_toast(errors: Array) -> void:
 	var script: GDScript = load("res://scripts/ui/hub_controller.gd")
 	if script == null:
@@ -192,4 +251,35 @@ func _test_hub_shows_victory_toast(errors: Array) -> void:
 		errors.append("hub toast text should accept Победа, got %s" % text)
 	if text == "Поражение":
 		errors.append("victory toast must not be Поражение")
+	hub.free()
+
+
+func _test_hub_shows_equip_and_skills(errors: Array) -> void:
+	var script: GDScript = load("res://scripts/ui/hub_controller.gd")
+	if script == null:
+		errors.append("HubController script missing")
+		return
+	var hub = script.new()
+	if not hub.has_method("equipped_summary") or not hub.has_method("skills_summary"):
+		errors.append("HubController should expose equipped_summary and skills_summary")
+		hub.free()
+		return
+	var mage := Hero.new(ClassId.Value.MAGE)
+	mage.equip(GearItem.from_dict({
+		"id": "staff_n",
+		"name": "Apprentice Staff",
+		"slot": "weapon",
+		"rarity": Rarity.Value.N,
+		"atk_bonus": 3,
+		"def_bonus": 0,
+		"hp_bonus": 0
+	}))
+	var gear_line := str(hub.equipped_summary(mage))
+	if gear_line.find("staff_n") < 0 and gear_line.find("Apprentice Staff") < 0:
+		errors.append("equipped_summary should show weapon id or name, got %s" % gear_line)
+	if gear_line.find("armor") < 0 and gear_line.find("Броня") < 0:
+		errors.append("equipped_summary should mention armor slot, got %s" % gear_line)
+	var skill_line := str(hub.skills_summary(mage))
+	if skill_line.find("flame_spark") < 0 and skill_line.find("Flame Spark") < 0:
+		errors.append("skills_summary should list unlocked skill id or name, got %s" % skill_line)
 	hub.free()

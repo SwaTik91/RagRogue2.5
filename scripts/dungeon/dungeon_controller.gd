@@ -96,6 +96,7 @@ func spawn_current_room() -> void:
 func handle_combat_clear(session) -> String:
 	if session == null or not ("run" in session):
 		return "none"
+	award_combat_clear_xp(session)
 	if _banner != null:
 		_banner.text = "Комната зачищена"
 	if current_room_type(session.run) == RoomType.Value.BOSS:
@@ -103,6 +104,30 @@ func handle_combat_clear(session) -> String:
 			session.apply_victory()
 		return "victory"
 	return "upgrade"
+
+
+func room_clear_monster_tier(run: RunState) -> int:
+	var total := 0
+	for def in spawn_plan(current_room_monster_ids(run)):
+		if def is Dictionary:
+			total += int(def.get("tier", 0))
+	return total
+
+
+func award_combat_clear_xp(session) -> void:
+	if session == null or not ("run" in session):
+		return
+	if not session.has_method("active_hero"):
+		return
+	var hero = session.active_hero()
+	if not (hero is Hero):
+		return
+	var tier := room_clear_monster_tier(session.run)
+	if tier <= 0:
+		return
+	RewardResolver.apply_room_clear(hero, tier)
+	if session.has_method("persist"):
+		session.persist()
 
 
 func apply_upgrade_and_advance(session, upgrade_id: String) -> void:

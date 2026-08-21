@@ -9,7 +9,7 @@ static func load_or_create(path: String) -> Dictionary:
 			var parsed = JSON.parse_string(file.get_as_text())
 			if parsed is Dictionary and _is_valid_account(parsed):
 				return parsed
-	var data := _default_account()
+	var data := default_account()
 	write(path, data)
 	return data
 
@@ -22,9 +22,10 @@ static func write(path: String, data: Dictionary) -> void:
 	file.store_string(JSON.stringify(data, "\t"))
 
 
-static func _default_account() -> Dictionary:
+static func default_account() -> Dictionary:
 	return {
 		"version": 1,
+		"active_class": ClassId.Value.SWORDMAN,
 		"heroes": [
 			Hero.new(ClassId.Value.SWORDMAN).to_dict(),
 			Hero.new(ClassId.Value.MAGE).to_dict(),
@@ -37,4 +38,9 @@ static func _is_valid_account(data: Dictionary) -> bool:
 	if int(data.get("version", 0)) != 1:
 		return false
 	var heroes = data.get("heroes", null)
-	return heroes is Array and heroes.size() == 3
+	if not (heroes is Array) or heroes.size() != 3:
+		return false
+	for entry in heroes:
+		if not (entry is Dictionary):
+			return false
+	return true

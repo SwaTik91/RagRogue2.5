@@ -6,6 +6,7 @@ func run() -> Array:
 	_test_mage_unlocks_by_level(errors)
 	_test_all_classes_have_starter_and_unlocks(errors)
 	_test_player_loads_unlocked_skills(errors)
+	_test_combat_skills_capped_at_four(errors)
 	return errors
 
 
@@ -55,6 +56,28 @@ func _test_player_loads_unlocked_skills(errors: Array) -> void:
 		errors.append("level 1 Mage bind should load 3 skills, got %d" % player.skills.size())
 	mage.level = 5
 	player.bind_hero(mage)
-	if player.skills.size() != 5:
-		errors.append("level 5 Mage bind should load 5 skills, got %d" % player.skills.size())
+	if player.skills.size() != 4:
+		errors.append("level 5 Mage bind should load first 4 unlocked skills, got %d" % player.skills.size())
+	player.free()
+
+
+func _test_combat_skills_capped_at_four(errors: Array) -> void:
+	var script: GDScript = load("res://scripts/dungeon/player_controller.gd")
+	if script == null or not script.can_instantiate():
+		errors.append("PlayerController script missing")
+		return
+	var player = script.new()
+	if not player.has_method("capped_skill_ids"):
+		errors.append("PlayerController.capped_skill_ids helper should exist")
+		player.free()
+		return
+	var five: Array = ["a", "b", "c", "d", "e"]
+	var capped: Array = player.capped_skill_ids(five)
+	if capped.size() != 4:
+		errors.append("capped_skill_ids should keep first 4, got %d" % capped.size())
+	elif str(capped[0]) != "a" or str(capped[3]) != "d":
+		errors.append("capped_skill_ids should be first four ids, got %s" % str(capped))
+	var three: Array = ["a", "b", "c"]
+	if player.capped_skill_ids(three).size() != 3:
+		errors.append("capped_skill_ids should keep fewer than 4 ids")
 	player.free()
