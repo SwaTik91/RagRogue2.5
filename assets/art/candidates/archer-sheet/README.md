@@ -1,11 +1,5 @@
-# Stage 4 — Archer full-body sheet (recolor set)
+# Archer candidates
 
-Previous set archived in `set1/`.
+Active pick set: **`../archer-ro-vibe/`** (RO Origin vibe).
 
-New color variants (Ludo `generateWithStyle`):
-- **A1** — forest emerald / moss / bronze
-- **A2** — sunset coral / sand / copper
-- **A3** — midnight indigo / silver / lavender
-- **A4** — cream cloak / crimson sash / gold
-
-Pick **A1–A4**.
+Older sets: this folder + `set1/` + `../archer-recolor/`.
