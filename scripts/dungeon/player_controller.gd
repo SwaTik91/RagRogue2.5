@@ -7,6 +7,7 @@ var hp: float = 1.0
 var hp_max: float = 1.0
 var atk: int = 1
 var defense: int = 1
+var cdr_bonus: float = 0.0
 var class_id: int = ClassId.Value.SWORDMAN
 var skills: Array = []
 var cds: Dictionary = {}
@@ -20,18 +21,33 @@ func _ready() -> void:
 	call_deferred("_resolve_stick")
 
 
-func bind_hero(hero: Hero) -> void:
+func bind_hero(hero: Hero, modifiers: Array = []) -> void:
 	if hero == null:
 		return
-	var stats := CombatStats.from_hero(hero)
-	move_speed = float(stats.move_speed)
-	atk = int(stats.atk)
-	defense = int(stats.def)
-	hp_max = float(stats.hp_max)
+	_apply_combat_stats(CombatStats.from_hero(hero, modifiers))
 	hp = hp_max
 	class_id = hero.class_id
 	skills = _load_class_skills(hero)
 	cds.clear()
+
+
+func apply_run_stats(hero: Hero, modifiers: Array = []) -> void:
+	if hero == null:
+		return
+	var prev_max := hp_max
+	_apply_combat_stats(CombatStats.from_hero(hero, modifiers))
+	var gained := hp_max - prev_max
+	if gained > 0.0:
+		hp += gained
+	hp = minf(hp, hp_max)
+
+
+func _apply_combat_stats(stats: Dictionary) -> void:
+	move_speed = float(stats.move_speed)
+	atk = int(stats.atk)
+	defense = int(stats.def)
+	hp_max = float(stats.hp_max)
+	cdr_bonus = float(stats.get("cdr_bonus", 0.0))
 
 
 func to_combatant() -> Dictionary:
@@ -108,7 +124,10 @@ func _bind_active_hero() -> void:
 		return
 	var hero = session.active_hero()
 	if hero is Hero:
-		bind_hero(hero)
+		var modifiers: Array = []
+		if "run" in session and session.run != null:
+			modifiers = session.run.modifiers
+		bind_hero(hero, modifiers)
 
 
 func _load_class_skills(hero: Hero) -> Array:
@@ -120,7 +139,8 @@ func _load_class_skills(hero: Hero) -> Array:
 	if not (parsed is Array):
 		return loaded
 	var allowed: Dictionary = {}
-	for sid in hero.skill_ids:
+	var unlocked: Array = hero.unlocked_skill_ids() if hero.has_method("unlocked_skill_ids") else hero.skill_ids
+	for sid in unlocked:
 		allowed[str(sid)] = true
 	for item in parsed:
 		if not (item is Dictionary):

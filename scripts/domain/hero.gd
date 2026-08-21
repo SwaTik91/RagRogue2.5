@@ -22,6 +22,28 @@ func add_xp(amount: int) -> void:
 		level += 1
 
 
+func unlocked_skill_ids() -> Array[String]:
+	var ids: Array[String] = []
+	var file := FileAccess.open("res://data/skills.json", FileAccess.READ)
+	if file == null:
+		return ids
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not (parsed is Array):
+		return ids
+	for item in parsed:
+		if not (item is Dictionary):
+			continue
+		if int(item.get("class_id", -1)) != class_id:
+			continue
+		if int(item.get("unlock_level", 1)) > level:
+			continue
+		var sid := str(item.get("id", ""))
+		if sid == "":
+			continue
+		ids.append(sid)
+	return ids
+
+
 func equip(item: GearItem) -> void:
 	equipped[item.slot] = item
 	hp_max = int(CombatStats.from_hero(self).hp_max)

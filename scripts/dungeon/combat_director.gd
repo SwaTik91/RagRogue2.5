@@ -52,7 +52,7 @@ func player_act(player_state: Dictionary, foes: Array, skills: Array, cds: Dicti
 	if skill != null and skill.kind == "heal":
 		var heal := maxi(1, skill.power)
 		player_state.hp = minf(float(player_state.hp_max), float(player_state.hp) + float(heal))
-		cds[skill.id] = skill.cooldown
+		cds[skill.id] = _skill_cooldown(skill, player_state)
 		return {"applied": true, "skill_id": skill.id, "target_index": -1, "damage": -heal}
 	var reach := attack_range_for_class(int(player_state.get("class_id", 0)))
 	if dist > reach:
@@ -67,12 +67,12 @@ func player_act(player_state: Dictionary, foes: Array, skills: Array, cds: Dicti
 			var aoe_dmg := AutoCombat.skill_damage(skill.power, int(player_state.atk), int(foe.get("def", 0)))
 			foe.hp = maxf(0.0, float(foe.hp) - float(aoe_dmg))
 			dealt = aoe_dmg
-		cds[skill.id] = skill.cooldown
+		cds[skill.id] = _skill_cooldown(skill, player_state)
 		return {"applied": true, "skill_id": skill.id, "target_index": idx, "damage": dealt}
 	if skill != null:
 		var skill_dmg := AutoCombat.skill_damage(skill.power, int(player_state.atk), int(target.get("def", 0)))
 		target.hp = maxf(0.0, float(target.hp) - float(skill_dmg))
-		cds[skill.id] = skill.cooldown
+		cds[skill.id] = _skill_cooldown(skill, player_state)
 		return {"applied": true, "skill_id": skill.id, "target_index": idx, "damage": skill_dmg}
 	if float(cds.get(BASIC_CD_KEY, 0.0)) > 0.0:
 		return empty
@@ -153,14 +153,30 @@ func _physics_process(delta: float) -> void:
 
 func _read_player() -> Dictionary:
 	var pos: Vector2 = player.global_position if player.is_inside_tree() else player.position
-	return {
+	var state := {
 		"pos": pos,
 		"hp": float(player.hp),
 		"hp_max": float(player.hp_max),
 		"atk": int(player.atk),
 		"def": int(player.defense),
-		"class_id": int(player.class_id)
+		"class_id": int(player.class_id),
+		"cdr_bonus": float(player.cdr_bonus) if "cdr_bonus" in player else 0.0
 	}
+	var session := get_node_or_null("/root/GameSession")
+	if session != null and session.has_method("active_hero") and "run" in session:
+		var hero = session.active_hero()
+		if hero is Hero:
+			var stats := CombatStats.from_hero(hero, session.run.modifiers)
+			state.atk = int(stats.atk)
+			state.def = int(stats.def)
+			state.hp_max = float(stats.hp_max)
+			state.cdr_bonus = float(stats.get("cdr_bonus", 0.0))
+	return state
+
+
+func _skill_cooldown(skill: SkillDef, player_state: Dictionary) -> float:
+	var cdr := clampf(float(player_state.get("cdr_bonus", 0.0)), 0.0, 0.9)
+	return maxf(0.05, skill.cooldown * (1.0 - cdr))
 
 
 func _read_enemies() -> Array:

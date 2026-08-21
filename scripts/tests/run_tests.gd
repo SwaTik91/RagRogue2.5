@@ -18,6 +18,7 @@ func _init() -> void:
 	failed += _run("res://scripts/tests/test_upgrade_pick.gd")
 	failed += _run("res://scripts/tests/test_act_clear.gd")
 	failed += _run("res://scripts/tests/test_skill_unlock.gd")
+	failed += _run("res://scripts/tests/test_run_modifiers.gd")
 	quit(1 if failed > 0 else 0)
 
 func _run(path: String) -> int:

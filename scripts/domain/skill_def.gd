@@ -7,6 +7,7 @@ var class_id: int = 0
 var cooldown: float = 0.0
 var power: int = 0
 var kind: String = "single"
+var unlock_level: int = 1
 
 
 static func from_dict(d: Dictionary) -> SkillDef:
@@ -17,6 +18,7 @@ static func from_dict(d: Dictionary) -> SkillDef:
 	skill.cooldown = float(d.get("cooldown", 0.0))
 	skill.power = int(d.get("power", 0))
 	skill.kind = str(d.get("kind", "single"))
+	skill.unlock_level = int(d.get("unlock_level", 1))
 	return skill
 
 
@@ -27,5 +29,6 @@ func to_dict() -> Dictionary:
 		"class_id": class_id,
 		"cooldown": cooldown,
 		"power": power,
-		"kind": kind
+		"kind": kind,
+		"unlock_level": unlock_level
 	}

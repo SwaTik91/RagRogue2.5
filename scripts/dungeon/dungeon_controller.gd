@@ -109,6 +109,7 @@ func apply_upgrade_and_advance(session, upgrade_id: String) -> void:
 	if session == null or not ("run" in session):
 		return
 	session.run.apply_upgrade(str(upgrade_id))
+	_refresh_player_run_stats(session)
 	session.run.on_room_cleared()
 	advance_past_empty_rooms(session.run)
 	if is_act_finished(session.run):
@@ -117,6 +118,21 @@ func apply_upgrade_and_advance(session, upgrade_id: String) -> void:
 		return
 	if is_inside_tree():
 		spawn_current_room()
+
+
+func _refresh_player_run_stats(session) -> void:
+	if _player == null or not is_instance_valid(_player):
+		return
+	if session == null or not session.has_method("active_hero"):
+		return
+	var hero = session.active_hero()
+	if not (hero is Hero):
+		return
+	var modifiers: Array = session.run.modifiers if "run" in session else []
+	if _player.has_method("apply_run_stats"):
+		_player.apply_run_stats(hero, modifiers)
+	elif _player.has_method("bind_hero"):
+		_player.bind_hero(hero, modifiers)
 
 
 func on_combat_room_cleared() -> void:
