@@ -5,6 +5,8 @@ func _init() -> void:
 	failed += _run("res://scripts/tests/test_smoke.gd")
 	failed += _run("res://scripts/tests/test_hero.gd")
 	failed += _run("res://scripts/tests/test_auto_combat.gd")
+	failed += _run("res://scripts/tests/test_floor_gen.gd")
+	failed += _run("res://scripts/tests/test_run_state.gd")
 	quit(1 if failed > 0 else 0)
 
 func _run(path: String) -> int:
