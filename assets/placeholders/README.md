@@ -1,6 +1,6 @@
 # Ludo AI media drop points
 
-Store art is produced via **Ludo AI (Higgsfield)**. Do not generate it in-repo until asked. Do not use official Ragnarok trademarks, logos, or copyrighted character designs.
+Store art is produced via **Ludo.ai**. Do not generate it in-repo until asked. Do not use official Ragnarok trademarks, logos, or copyrighted character designs.
 
 Briefs: [`docs/store/ludo-ai-briefs.md`](../../docs/store/ludo-ai-briefs.md) (copied from spec §7).
 
