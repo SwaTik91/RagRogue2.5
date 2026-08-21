@@ -53,6 +53,10 @@ func _show_toast(text: String) -> void:
 		return
 	toast_label.text = text
 	toast_label.visible = text != ""
+	if text == "Победа":
+		toast_label.add_theme_color_override("font_color", Color(0.42, 0.86, 0.48, 1))
+	elif text == "Поражение":
+		toast_label.add_theme_color_override("font_color", Color(0.92, 0.32, 0.32, 1))
 
 
 func _refresh_level() -> void:

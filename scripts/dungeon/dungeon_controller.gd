@@ -6,6 +6,7 @@ var _enemies_root: Node2D = null
 var _monster_table: Dictionary = {}
 var _hp_label: Label = null
 var _banner: Label = null
+var _upgrade_modal: Node = null
 
 
 func _ready() -> void:
@@ -47,7 +48,21 @@ func current_room_monster_ids(run: RunState) -> Array:
 
 
 func is_act_finished(run: RunState) -> bool:
-	return run == null or run.floor_index >= FloorGen.ACT_FLOOR_COUNT
+	if run == null:
+		return true
+	var short := false
+	if "short_act" in run:
+		short = bool(run.short_act)
+	return run.floor_index >= FloorGen.act_floor_count(short)
+
+
+func current_room_type(run: RunState) -> int:
+	if run == null or run.room_index < 0 or run.room_index >= run.rooms.size():
+		return -1
+	var room = run.rooms[run.room_index]
+	if room is Dictionary:
+		return int(room.get("type", -1))
+	return -1
 
 
 func advance_past_empty_rooms(run: RunState) -> void:
@@ -78,18 +93,80 @@ func spawn_current_room() -> void:
 		_banner.text = ""
 
 
-func on_combat_room_cleared() -> void:
+func handle_combat_clear(session) -> String:
+	if session == null or not ("run" in session):
+		return "none"
 	if _banner != null:
 		_banner.text = "Комната зачищена"
-	var session := get_node_or_null("/root/GameSession")
+	if current_room_type(session.run) == RoomType.Value.BOSS:
+		if session.has_method("apply_victory"):
+			session.apply_victory()
+		return "victory"
+	return "upgrade"
+
+
+func apply_upgrade_and_advance(session, upgrade_id: String) -> void:
 	if session == null or not ("run" in session):
 		return
-	# Task 9 will insert the upgrade pick before advancing.
+	session.run.apply_upgrade(str(upgrade_id))
 	session.run.on_room_cleared()
-	if session.run.floor_index >= FloorGen.ACT_FLOOR_COUNT:
+	advance_past_empty_rooms(session.run)
+	if is_act_finished(session.run):
+		if is_inside_tree():
+			call_deferred("_change_to_hub")
 		return
-	var timer := get_tree().create_timer(0.9)
-	timer.timeout.connect(spawn_current_room, CONNECT_ONE_SHOT)
+	if is_inside_tree():
+		spawn_current_room()
+
+
+func on_combat_room_cleared() -> void:
+	var session := get_node_or_null("/root/GameSession")
+	var outcome := handle_combat_clear(session)
+	if outcome == "victory":
+		call_deferred("_change_to_hub")
+		return
+	if outcome == "upgrade":
+		_show_upgrade_pick()
+
+
+func _show_upgrade_pick() -> void:
+	if _upgrade_modal != null and is_instance_valid(_upgrade_modal):
+		_upgrade_modal.queue_free()
+		_upgrade_modal = null
+	var packed: PackedScene = load("res://scenes/ui/upgrade_pick.tscn")
+	if packed == null:
+		var session := get_node_or_null("/root/GameSession")
+		apply_upgrade_and_advance(session, "")
+		return
+	_upgrade_modal = packed.instantiate()
+	var hud := get_node_or_null("HUD")
+	if hud != null:
+		hud.add_child(_upgrade_modal)
+	else:
+		add_child(_upgrade_modal)
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var offered: Array = []
+	if _upgrade_modal.has_method("pick_three"):
+		offered = _upgrade_modal.pick_three(rng)
+	if _upgrade_modal.has_method("present"):
+		_upgrade_modal.present(offered)
+	if _upgrade_modal.has_signal("upgrade_chosen"):
+		_upgrade_modal.upgrade_chosen.connect(_on_upgrade_chosen, CONNECT_ONE_SHOT)
+
+
+func _on_upgrade_chosen(upgrade_id: String) -> void:
+	if _upgrade_modal != null and is_instance_valid(_upgrade_modal):
+		_upgrade_modal.queue_free()
+	_upgrade_modal = null
+	var session := get_node_or_null("/root/GameSession")
+	apply_upgrade_and_advance(session, upgrade_id)
+
+
+func _change_to_hub() -> void:
+	var tree := get_tree()
+	if tree != null:
+		tree.change_scene_to_file("res://scenes/hub/hub.tscn")
 
 
 func spawn_plan_positions(count: int) -> Array:

@@ -8,6 +8,7 @@ var active_class: int = ClassId.Value.SWORDMAN
 var run: RunState = RunState.new()
 var save_path: String = DEFAULT_SAVE_PATH
 var pending_toast: String = ""
+var debug_short_act: bool = false
 
 var _heroes: Array = []
 
@@ -43,10 +44,33 @@ func persist() -> void:
 func start_run() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	run.start_act(rng)
+	run.start_act(rng, debug_short_act)
 
 
 func apply_defeat() -> void:
 	RewardResolver.apply_death(active_hero(), run)
 	pending_toast = "Поражение"
 	persist()
+
+
+func apply_victory(rng: RandomNumberGenerator = null) -> void:
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
+	RewardResolver.grant_boss_loot(active_hero(), _load_gear_pool(), rng)
+	pending_toast = "Победа"
+	persist()
+
+
+func _load_gear_pool() -> Array:
+	var pool: Array = []
+	var file := FileAccess.open("res://data/gear.json", FileAccess.READ)
+	if file == null:
+		return pool
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not (parsed is Array):
+		return pool
+	for item in parsed:
+		if item is Dictionary:
+			pool.append(GearItem.from_dict(item))
+	return pool

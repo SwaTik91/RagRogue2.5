@@ -6,6 +6,7 @@ var rooms: Array = []
 var room_index: int = 0
 var modifiers: Array[String] = []
 var alive: bool = true
+var short_act: bool = false
 
 var _rng: RandomNumberGenerator
 var _known_upgrades: Dictionary = {}
@@ -15,13 +16,14 @@ func _init() -> void:
 	_known_upgrades = _load_upgrade_ids()
 
 
-func start_act(rng: RandomNumberGenerator) -> void:
+func start_act(rng: RandomNumberGenerator, p_short_act: bool = false) -> void:
 	_rng = rng
+	short_act = p_short_act
 	floor_index = 0
 	room_index = 0
 	modifiers.clear()
 	alive = true
-	rooms = FloorGen.make_floor(floor_index, _rng)
+	rooms = FloorGen.make_floor(floor_index, _rng, short_act)
 
 
 func apply_upgrade(upgrade_id: String) -> void:
@@ -46,7 +48,7 @@ func on_room_cleared() -> void:
 	floor_index += 1
 	room_index = 0
 	var rng := _rng if _rng != null else RandomNumberGenerator.new()
-	rooms = FloorGen.make_floor(floor_index, rng)
+	rooms = FloorGen.make_floor(floor_index, rng, short_act)
 
 
 func _load_upgrade_ids() -> Dictionary:

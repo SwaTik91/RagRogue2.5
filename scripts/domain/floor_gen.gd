@@ -4,7 +4,16 @@ extends RefCounted
 const ACT_FLOOR_COUNT := 4
 
 
-static func make_floor(floor_index: int, rng: RandomNumberGenerator) -> Array:
+static func act_floor_count(short_act: bool = false) -> int:
+	return 1 if short_act else ACT_FLOOR_COUNT
+
+
+static func make_floor(floor_index: int, rng: RandomNumberGenerator, short_act: bool = false) -> Array:
+	if short_act:
+		return [
+			_room(RoomType.Value.COMBAT, _combat_ids(0, rng)),
+			_room(RoomType.Value.BOSS, ["act_boss"])
+		]
 	var rooms: Array = []
 	var combat_count := 2 + rng.randi_range(1, 2)
 	for _i in combat_count:
@@ -13,7 +22,7 @@ static func make_floor(floor_index: int, rng: RandomNumberGenerator) -> Array:
 		rooms.append(_room(RoomType.Value.EVENT, []))
 	rooms.append(_room(RoomType.Value.LOOT, []))
 	_shuffle(rooms, rng)
-	if floor_index == ACT_FLOOR_COUNT - 1:
+	if floor_index == act_floor_count(short_act) - 1:
 		rooms.append(_room(RoomType.Value.BOSS, ["act_boss"]))
 	return rooms
 
