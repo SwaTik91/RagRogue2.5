@@ -13,6 +13,7 @@ func _init() -> void:
 	failed += _run("res://scripts/tests/test_player_controller.gd")
 	failed += _run("res://scripts/tests/test_combat_director.gd")
 	failed += _run("res://scripts/tests/test_dungeon_spawn.gd")
+	failed += _run("res://scripts/tests/test_empty_room_advance.gd")
 	failed += _run("res://scripts/tests/test_defeat_flow.gd")
 	quit(1 if failed > 0 else 0)
 

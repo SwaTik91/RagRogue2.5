@@ -257,6 +257,10 @@ func _handle_defeat() -> void:
 	var session := get_node_or_null("/root/GameSession")
 	if session != null and session.has_method("apply_defeat"):
 		session.apply_defeat()
+	call_deferred("_change_to_hub")
+
+
+func _change_to_hub() -> void:
 	var tree := get_tree()
 	if tree != null:
 		tree.change_scene_to_file("res://scenes/hub/hub.tscn")

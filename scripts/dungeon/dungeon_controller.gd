@@ -46,9 +46,27 @@ func current_room_monster_ids(run: RunState) -> Array:
 	return []
 
 
+func is_act_finished(run: RunState) -> bool:
+	return run == null or run.floor_index >= FloorGen.ACT_FLOOR_COUNT
+
+
+func advance_past_empty_rooms(run: RunState) -> void:
+	if run == null:
+		return
+	var guard := 0
+	while not is_act_finished(run) and spawn_plan(current_room_monster_ids(run)).is_empty():
+		run.on_room_cleared()
+		guard += 1
+		if guard > 64:
+			break
+
+
 func spawn_current_room() -> void:
 	var session := get_node_or_null("/root/GameSession")
 	if session == null or not ("run" in session):
+		return
+	advance_past_empty_rooms(session.run)
+	if is_act_finished(session.run):
 		return
 	_clear_enemies()
 	var plan := spawn_plan(current_room_monster_ids(session.run))
