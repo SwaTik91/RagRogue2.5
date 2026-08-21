@@ -1,5 +1,5 @@
 # Archer candidates
 
-Active pick set: **`../archer-ro-vibe/`** (RO Origin vibe).
+Active pick set: **`../archer-male/`** (male, RO Origin vibe).
 
-Older sets: this folder + `set1/` + `../archer-recolor/`.
+Older sets: `../archer-ro-vibe/`, `../archer-recolor/`, `set1/`.
