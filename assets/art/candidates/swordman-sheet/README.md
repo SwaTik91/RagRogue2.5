@@ -1,4 +1,3 @@
-# Stage 3 — Swordman full-body sheet candidates
+# Stage 3 — Swordman full-body sheet
 
-Style locked from Mage sheet **v3**. Generated via Ludo `generateWithStyle`.
-Pick **v1–v4**.
+**Winner: v3 (S3)** → locked at `assets/art/characters/swordman/sheet.png`.

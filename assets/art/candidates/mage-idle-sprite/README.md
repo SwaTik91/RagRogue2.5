@@ -1,4 +1,3 @@
-# Mage idle / top-down sprite candidates
+# Mage idle / top-down sprite
 
-From locked Mage sheet **v3**. Generated via Ludo `generateWithStyle` (`image_type: sprite`).
-Pick **v1–v4** for in-game use.
+**Winner: v4 (M4)** → locked at `assets/art/characters/mage/idle.png`.
