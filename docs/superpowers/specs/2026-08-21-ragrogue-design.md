@@ -1,7 +1,7 @@
 # RagRogue — Design Spec (GDD-lite + AppGallery)
 
 **Date:** 2026-08-21  
-**Status:** Approved for documentation (implementation plan not started)  
+**Status:** Approved — implementation plan: `docs/superpowers/plans/2026-08-21-ragrogue-mvp.md`  
 **Platform target:** Huawei AppGallery, markets RU/CIS only  
 **Working title / store name:** RagRogue  
 
