@@ -31,7 +31,7 @@ func _test_ranges_and_aggro(director, errors: Array) -> void:
 		errors.append("Mage attack range should be 160")
 	if not is_equal_approx(float(director.attack_range_for_class(ClassId.Value.ARCHER)), 160.0):
 		errors.append("Archer attack range should be 160")
-	if not director.get("AGGRO_RADIUS") == 180.0 and not is_equal_approx(float(director.AGGRO_RADIUS), 180.0):
+	if not is_equal_approx(float(director.AGGRO_RADIUS), 180.0):
 		errors.append("AGGRO_RADIUS should be 180")
 
 
