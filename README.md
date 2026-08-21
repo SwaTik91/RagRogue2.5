@@ -89,5 +89,6 @@ Install the 4.3.stable Android export templates, a JDK, and an Android SDK on a 
 - `scripts/app/` — autoloads (`GameSession`)
 - `scripts/tests/` — headless runner and cases
 - `scenes/` — Godot scenes
-- `docs/store/` — AppGallery listing and privacy drafts
+- `docs/store/` — AppGallery listing, privacy, and Ludo AI media briefs
+- `assets/` — branding + screenshot drop points (`assets/placeholders/README.md`)
 - `export_presets.cfg` — Android landscape export preset
