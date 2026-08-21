@@ -59,10 +59,11 @@ func choose(index: int) -> void:
 
 
 func _choice_button(index: int) -> Button:
-	var named := get_node_or_null("%Choice%d" % index) as Button
+	var button_name := "Choice%d" % index
+	var named := get_node_or_null("%" + button_name) as Button
 	if named != null:
 		return named
-	return get_node_or_null("Panel/Choices/Choice%d" % index) as Button
+	return get_node_or_null("Panel/Choices/" + button_name) as Button
 
 
 func _label_for(item: Dictionary) -> String:
