@@ -17,28 +17,28 @@ var demo_move_override: Vector2 = Vector2.ZERO
 var demo_move_active: bool = false
 
 
-var _visual := ActorVisual.new()
+var _animator := ActorAnimator.new()
 
 
 func _ready() -> void:
 	_bind_active_hero()
 	_make_camera_current()
-	_setup_visual()
+	_setup_animator()
 	call_deferred("_resolve_stick")
 
 
-func _setup_visual() -> void:
-	var sprite := get_node_or_null("Sprite") as Sprite2D
+func _setup_animator() -> void:
+	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite != null:
-		_visual.setup(sprite, self)
+		_animator.setup(sprite, self)
 
 
 func play_combat_anim(is_skill: bool = false) -> void:
-	_visual.play_attack(is_skill)
+	_animator.play_attack(is_skill)
 
 
 func play_hit_anim() -> void:
-	_visual.play_hit()
+	_animator.play_hit()
 
 
 func set_demo_move(v: Vector2) -> void:
@@ -120,7 +120,7 @@ func _physics_process(_delta: float) -> void:
 		set_move_vector(combine_move_vector(stick_v, key_v, OS.has_feature(EDITOR_FEATURE)))
 	velocity = compute_velocity()
 	move_and_slide()
-	_visual.update_motion(velocity, _delta)
+	_animator.update_motion(velocity, _delta)
 
 
 func _stick_vector() -> Vector2:
@@ -208,17 +208,16 @@ func _make_camera_current() -> void:
 
 
 func _apply_look() -> void:
-	var sprite := get_node_or_null("Sprite") as Sprite2D
+	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite == null:
 		return
-	var tex := SpriteCatalog.player_texture(class_id)
-	if tex == null:
+	var frames := SpriteFramesFactory.player_frames(class_id)
+	if frames == null:
 		var body := get_node_or_null("Body") as Polygon2D
 		if body != null:
 			body.visible = true
 		return
-	SpriteCatalog.fit_sprite(sprite, tex, SpriteCatalog.PLAYER_TARGET_HEIGHT)
-	_visual.capture_base_scale()
+	_animator.apply_sprite_frames(frames, SpriteCatalog.PLAYER_TARGET_HEIGHT)
 	var poly := get_node_or_null("Body") as Polygon2D
 	if poly != null:
 		poly.visible = false

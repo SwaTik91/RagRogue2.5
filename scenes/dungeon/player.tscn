@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/dungeon/player_controller.gd" id="1_pc"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
-radius = 24.0
+radius = 36.0
 
 [node name="Player" type="CharacterBody2D"]
 motion_mode = 1
@@ -17,8 +17,9 @@ visible = false
 color = Color(0.42, 0.55, 0.92, 1)
 polygon = PackedVector2Array(0, -16, 12, -6, 10, 14, -10, 14, -12, -6)
 
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
 z_index = 1
+centered = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true

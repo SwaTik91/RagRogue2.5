@@ -9,7 +9,7 @@ var defense: int = 0
 var tier: int = 1
 var move_speed: float = 80.0
 var cds: Dictionary = {}
-var _visual := ActorVisual.new()
+var _animator := ActorAnimator.new()
 
 
 func bind_monster(def: Dictionary) -> void:
@@ -26,21 +26,21 @@ func bind_monster(def: Dictionary) -> void:
 
 
 func play_combat_anim(is_skill: bool = false) -> void:
-	_visual.play_attack(is_skill)
+	_animator.play_attack(is_skill)
 
 
 func play_hit_anim() -> void:
-	_visual.play_hit()
+	_animator.play_hit()
 
 
 func _ready() -> void:
-	var sprite := get_node_or_null("Sprite") as Sprite2D
+	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite != null:
-		_visual.setup(sprite, self)
+		_animator.setup(sprite, self)
 
 
 func _physics_process(delta: float) -> void:
-	_visual.update_motion(velocity, delta)
+	_animator.update_motion(velocity, delta)
 
 
 func to_combatant() -> Dictionary:
@@ -57,12 +57,13 @@ func refresh_alive() -> void:
 
 
 func _apply_look() -> void:
-	var sprite := get_node_or_null("Sprite") as Sprite2D
-	var tex := SpriteCatalog.monster_texture(monster_id)
-	if sprite != null and tex != null:
+	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
+	if sprite == null:
+		return
+	var frames := SpriteFramesFactory.monster_frames(monster_id)
+	if frames != null:
 		var target := SpriteCatalog.target_height_for_monster(monster_id)
-		SpriteCatalog.fit_sprite(sprite, tex, target)
-		_visual.capture_base_scale()
+		_animator.apply_sprite_frames(frames, target)
 		var poly := get_node_or_null("Body") as Polygon2D
 		if poly != null:
 			poly.visible = false
