@@ -1,4 +1,3 @@
-# Swordman — classic RO male set (active)
+# Swordman — classic RO male
 
-Same treatment as Archer classic-RO. Pick **S1–S4**.
-Previous lock S3 kept at `assets/art/characters/swordman/` until you pick a new winner.
+**Winner: S1 starter** → locked at `assets/art/characters/swordman/sheet.png`.
