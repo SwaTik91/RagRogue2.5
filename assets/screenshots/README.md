@@ -1,7 +1,8 @@
-# Store screenshots (locked)
+# Store media (locked)
 
-Dropped from Ludo picks C3 / K3 / L3:
+- `shot-1.png` — combat (C3)
+- `shot-2.png` — class select (K3)
+- `shot-3.png` — loot (L3)
+- `combat-loop.mp4` — optional store video (Ludo marketing loop from Shot1)
 
-- `shot-1.png` — combat hook
-- `shot-2.png` — class select
-- `shot-3.png` — loot / equip
+**Note:** `combat-loop.mp4` is promotional art animation, not a capture of the live Godot build (in-game entities are still Polygon2D placeholders until sprites are wired).
