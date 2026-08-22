@@ -291,15 +291,6 @@ func _chase_aggro_enemies() -> void:
 			node.velocity = Vector2.ZERO
 
 
-func _refresh_enemy_motion_anims() -> void:
-	for node in enemies:
-		if node == null or not is_instance_valid(node):
-			continue
-		if not node.has_method("refresh_motion_anim"):
-			continue
-		node.refresh_motion_anim()
-
-
 func _spawn_float(world_pos: Vector2, text: String, color: Color) -> void:
 	var parent := get_parent()
 	if parent == null:
