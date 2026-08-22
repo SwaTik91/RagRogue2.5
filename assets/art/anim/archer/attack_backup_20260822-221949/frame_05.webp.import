@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dd7o3h1rprsmh"
-path="res://.godot/imported/frame_05.webp-fdeea83f3d5a6775fd8778c96c1b6886.ctex"
+path="res://.godot/imported/frame_05.webp-2bd04606264f6432866541bd11142bff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/archer/attack/frame_05.webp"
-dest_files=["res://.godot/imported/frame_05.webp-fdeea83f3d5a6775fd8778c96c1b6886.ctex"]
+source_file="res://assets/art/anim/archer/attack_backup_20260822-221949/frame_05.webp"
+dest_files=["res://.godot/imported/frame_05.webp-2bd04606264f6432866541bd11142bff.ctex"]
 
 [params]
 

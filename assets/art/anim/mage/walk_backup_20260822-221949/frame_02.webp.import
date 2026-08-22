@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cxnvkgc24ru76"
-path="res://.godot/imported/frame_02.webp-18361bc209fc0eb690437f142ca44e7b.ctex"
+path="res://.godot/imported/frame_02.webp-06aa1a89d8355eef6b02967682e952e9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/mage/walk/frame_02.webp"
-dest_files=["res://.godot/imported/frame_02.webp-18361bc209fc0eb690437f142ca44e7b.ctex"]
+source_file="res://assets/art/anim/mage/walk_backup_20260822-221949/frame_02.webp"
+dest_files=["res://.godot/imported/frame_02.webp-06aa1a89d8355eef6b02967682e952e9.ctex"]
 
 [params]
 

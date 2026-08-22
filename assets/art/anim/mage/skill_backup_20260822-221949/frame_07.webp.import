@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8fv1aiku1ftn"
-path="res://.godot/imported/frame_07.webp-48aaf6bec27a199a8c2824aeda48c174.ctex"
+path="res://.godot/imported/frame_07.webp-d936d9effb0f3989e32885372ae7f63f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/mage/skill/frame_07.webp"
-dest_files=["res://.godot/imported/frame_07.webp-48aaf6bec27a199a8c2824aeda48c174.ctex"]
+source_file="res://assets/art/anim/mage/skill_backup_20260822-221949/frame_07.webp"
+dest_files=["res://.godot/imported/frame_07.webp-d936d9effb0f3989e32885372ae7f63f.ctex"]
 
 [params]
 

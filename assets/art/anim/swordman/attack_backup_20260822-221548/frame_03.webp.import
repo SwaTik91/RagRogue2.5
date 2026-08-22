@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dkyi8acxsh4p2"
-path="res://.godot/imported/frame_03.webp-5463627650181c208d590c0d787c21db.ctex"
+path="res://.godot/imported/frame_03.webp-d7e1c4cc54245b2b405749893655627c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/swordman/attack/frame_03.webp"
-dest_files=["res://.godot/imported/frame_03.webp-5463627650181c208d590c0d787c21db.ctex"]
+source_file="res://assets/art/anim/swordman/attack_backup_20260822-221548/frame_03.webp"
+dest_files=["res://.godot/imported/frame_03.webp-d7e1c4cc54245b2b405749893655627c.ctex"]
 
 [params]
 

@@ -24,33 +24,43 @@ DURATION = 3
 MODEL = "forge"
 
 
-def mcp_call(tool: str, request_body: dict) -> dict:
-    payload = {
-        "jsonrpc": "2.0",
-        "id": int(time.time() * 1000) % 1000000,
-        "method": "tools/call",
-        "params": {"name": tool, "arguments": {"requestBody": request_body}},
-    }
-    req = urllib.request.Request(
-        MCP_URL,
-        data=json.dumps(payload).encode(),
-        headers={
-            "Authorization": f"ApiKey {API_KEY}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=600) as resp:
-        raw = json.loads(resp.read().decode())
-    content = raw.get("result", {}).get("content", [])
-    texts = [c.get("text", "") for c in content if c.get("type") == "text"]
-    merged = "\n".join(texts)
-    if "API Error" in merged:
-        raise RuntimeError(merged[:800])
-    start = merged.find("{")
-    if start >= 0:
-        return json.loads(merged[start:])
-    raise RuntimeError(merged[:500])
+def mcp_call(tool: str, request_body: dict, retries: int = 3) -> dict:
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        try:
+            payload = {
+                "jsonrpc": "2.0",
+                "id": int(time.time() * 1000) % 1000000,
+                "method": "tools/call",
+                "params": {"name": tool, "arguments": {"requestBody": request_body}},
+            }
+            req = urllib.request.Request(
+                MCP_URL,
+                data=json.dumps(payload).encode(),
+                headers={
+                    "Authorization": f"ApiKey {API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                raw = json.loads(resp.read().decode())
+            content = raw.get("result", {}).get("content", [])
+            texts = [c.get("text", "") for c in content if c.get("type") == "text"]
+            merged = "\n".join(texts)
+            if "API Error" in merged:
+                raise RuntimeError(merged[:800])
+            start = merged.find("{")
+            if start >= 0:
+                return json.loads(merged[start:])
+            raise RuntimeError(merged[:500])
+        except Exception as exc:
+            last_err = exc
+            if attempt + 1 < retries:
+                wait = 4 * (2**attempt)
+                print(f"retry {attempt + 1}/{retries - 1} after error: {exc}", flush=True)
+                time.sleep(wait)
+    raise last_err  # type: ignore[misc]
 
 
 def local_image_uri(path: str) -> str:

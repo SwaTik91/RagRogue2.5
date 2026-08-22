@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://eqtbkgcgw0iw"
-path="res://.godot/imported/frame_02.webp-1e4242928bc8ac5552d6718b651516bb.ctex"
+path="res://.godot/imported/frame_02.webp-0b1af66b970a655d623c031d6549de5e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/archer/idle/frame_02.webp"
-dest_files=["res://.godot/imported/frame_02.webp-1e4242928bc8ac5552d6718b651516bb.ctex"]
+source_file="res://assets/art/anim/archer/idle_backup_20260822-221949/frame_02.webp"
+dest_files=["res://.godot/imported/frame_02.webp-0b1af66b970a655d623c031d6549de5e.ctex"]
 
 [params]
 

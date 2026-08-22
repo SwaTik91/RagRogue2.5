@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://doma16unnkew1"
-path="res://.godot/imported/frame_05.webp-2ee804f1e91bb7c14f8c0ed19ac82414.ctex"
+path="res://.godot/imported/frame_05.webp-4fd89b046fe7a2180d228df69f76ec7b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/swordman/idle/frame_05.webp"
-dest_files=["res://.godot/imported/frame_05.webp-2ee804f1e91bb7c14f8c0ed19ac82414.ctex"]
+source_file="res://assets/art/anim/swordman/idle_backup_20260822-221548/frame_05.webp"
+dest_files=["res://.godot/imported/frame_05.webp-4fd89b046fe7a2180d228df69f76ec7b.ctex"]
 
 [params]
 

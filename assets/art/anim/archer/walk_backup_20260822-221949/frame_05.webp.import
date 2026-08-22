@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbra8aprbrlqt"
-path="res://.godot/imported/frame_05.webp-97419c95f085fd6fca51e393305ef428.ctex"
+path="res://.godot/imported/frame_05.webp-f0e72cb07df31b9068dc8e95d1464b26.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/archer/walk/frame_05.webp"
-dest_files=["res://.godot/imported/frame_05.webp-97419c95f085fd6fca51e393305ef428.ctex"]
+source_file="res://assets/art/anim/archer/walk_backup_20260822-221949/frame_05.webp"
+dest_files=["res://.godot/imported/frame_05.webp-f0e72cb07df31b9068dc8e95d1464b26.ctex"]
 
 [params]
 

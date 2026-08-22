@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bpgo1gwws3wgk"
-path="res://.godot/imported/frame_02.webp-61a8ab3d0232e0227d6022167e4f0ee2.ctex"
+path="res://.godot/imported/frame_02.webp-370ec4b67a92026183cbed48b3ef38e9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/anim/swordman/walk/frame_02.webp"
-dest_files=["res://.godot/imported/frame_02.webp-61a8ab3d0232e0227d6022167e4f0ee2.ctex"]
+source_file="res://assets/art/anim/swordman/walk_backup_20260822-221548/frame_02.webp"
+dest_files=["res://.godot/imported/frame_02.webp-370ec4b67a92026183cbed48b3ef38e9.ctex"]
 
 [params]
 
