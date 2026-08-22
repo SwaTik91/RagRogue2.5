@@ -1,6 +1,7 @@
 class_name SpriteFramesFactory
 extends RefCounted
-## Load Ludo-generated frame sequences from assets/art/anim/{actor}/{anim}/
+## Load directional Ludo frames: assets/art/anim/{actor}/{facing}/{anim}/frame_*.webp
+## Animation names: idle_down, walk_up, attack_right, ...
 
 static var _cache: Dictionary = {}
 
@@ -16,7 +17,6 @@ const MONSTER_ACTOR := {
 	"act_boss": "vault_warden",
 }
 
-## Playback fps (SpriteFrames animation_speed). Do NOT also pass short per-frame durations.
 const ANIM_SPEEDS := {
 	"idle": 6.0,
 	"walk": 10.0,
@@ -46,13 +46,30 @@ static func _actor_frames(actor: String, is_hero: bool) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	var any := false
 	for anim_name in anims:
-		var added := _add_anim_from_folder(frames, anim_name, actor, anim_name)
-		if added:
+		var added_dir := _add_directional_anims(frames, anim_name, actor)
+		if added_dir:
+			any = true
+		elif _add_anim_from_folder(
+			frames,
+			DirectionIds.anim_key(anim_name, DirectionIds.DOWN),
+			actor,
+			anim_name
+		):
 			any = true
 	if not any:
 		return _fallback_frames(actor, is_hero)
 	_cache[key] = frames
 	return frames
+
+
+static func _add_directional_anims(frames: SpriteFrames, anim_name: String, actor: String) -> bool:
+	var any := false
+	for facing in DirectionIds.ALL:
+		var anim_key := DirectionIds.anim_key(anim_name, facing)
+		var folder := "%s/%s" % [facing, anim_name]
+		if _add_anim_from_folder(frames, anim_key, actor, folder):
+			any = true
+	return any
 
 
 static func _add_anim_from_folder(
@@ -65,13 +82,13 @@ static func _add_anim_from_folder(
 	var textures := _load_frame_textures(dir)
 	if textures.is_empty():
 		return false
+	var base_anim := anim_name.split("_")[0]
+	var loop := base_anim in ["idle", "walk"]
 	frames.add_animation(anim_name)
-	var loop := anim_name in ["idle", "walk"]
 	frames.set_animation_loop(anim_name, loop)
-	var speed := float(ANIM_SPEEDS.get(anim_name, 8.0))
+	var speed := float(ANIM_SPEEDS.get(base_anim, 8.0))
 	frames.set_animation_speed(anim_name, speed)
 	for tex in textures:
-		# Default frame duration (1.0); speed alone controls fps — avoids 10x+ jitter.
 		frames.add_frame(anim_name, tex)
 	return true
 
@@ -175,17 +192,21 @@ static func _fallback_frames(actor: String, is_hero: bool) -> SpriteFrames:
 	if tex == null:
 		return null
 	var frames := SpriteFrames.new()
-	frames.add_animation("idle")
-	frames.set_animation_loop("idle", true)
-	frames.add_frame("idle", tex, 0.5)
-	frames.add_animation("walk")
-	frames.set_animation_loop("walk", true)
-	frames.add_frame("walk", tex, 0.12)
-	frames.add_animation("attack")
-	frames.set_animation_loop("attack", false)
-	frames.add_frame("attack", tex, 0.1)
+	var down_idle := DirectionIds.anim_key("idle", DirectionIds.DOWN)
+	frames.add_animation(down_idle)
+	frames.set_animation_loop(down_idle, true)
+	frames.add_frame(down_idle, tex)
+	var down_walk := DirectionIds.anim_key("walk", DirectionIds.DOWN)
+	frames.add_animation(down_walk)
+	frames.set_animation_loop(down_walk, true)
+	frames.add_frame(down_walk, tex)
+	var down_attack := DirectionIds.anim_key("attack", DirectionIds.DOWN)
+	frames.add_animation(down_attack)
+	frames.set_animation_loop(down_attack, false)
+	frames.add_frame(down_attack, tex)
 	if is_hero:
-		frames.add_animation("skill")
-		frames.set_animation_loop("skill", false)
-		frames.add_frame("skill", tex, 0.08)
+		var down_skill := DirectionIds.anim_key("skill", DirectionIds.DOWN)
+		frames.add_animation(down_skill)
+		frames.set_animation_loop(down_skill, false)
+		frames.add_frame(down_skill, tex)
 	return frames

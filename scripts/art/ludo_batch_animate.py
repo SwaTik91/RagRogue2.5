@@ -81,9 +81,26 @@ def download(url: str, dest: str) -> None:
     urllib.request.urlretrieve(url, dest)
 
 
-def motion_prompt(actor: str, anim: str) -> str:
-    """Per-actor, per-animation motion prompts with explicit limb/body motion."""
-    prompts: dict[str, dict[str, str]] = {
+DIR_FACING = {
+    "down": (
+        "facing south toward camera, front of body visible, moves toward bottom of screen"
+    ),
+    "up": (
+        "facing north away from camera, back of body visible, moves toward top of screen"
+    ),
+    "right": (
+        "facing east, right side profile, body oriented to the right, moves right on screen"
+    ),
+    "left": (
+        "facing west, left side profile, body oriented to the left, moves left on screen"
+    ),
+}
+
+
+def motion_prompt(actor: str, anim: str, facing: str) -> str:
+    """Per-actor animation + explicit screen-facing direction (top-down 4-way)."""
+    facing_line = DIR_FACING.get(facing, "")
+    base_prompts: dict[str, dict[str, str]] = {
         "swordman": {
             "idle": (
                 "idle breathing loop, subtle chest rise and fall, slight weight shift between legs, "
@@ -156,10 +173,11 @@ def motion_prompt(actor: str, anim: str) -> str:
             "attack": "boss warden heavy weapon slam, wind-up overhead, crushing downward strike",
         },
     }
-    return prompts.get(actor, {}).get(
+    base = base_prompts.get(actor, {}).get(
         anim,
         f"{anim} animation, clear body motion, top-down roguelike fantasy {actor}",
     )
+    return f"{base}, {facing_line}"
 
 
 def margin_for(actor: str, anim: str) -> dict:
@@ -189,36 +207,38 @@ ACTORS = [
 ]
 
 JOBS = []
+DIRECTIONS = ["down", "up", "right", "left"]
 for actor, img_file in ACTORS:
     img_path = f"{GAME_ART}/{img_file}"
     is_hero = actor in ("mage", "swordman", "archer")
     anims = ["idle", "walk", "attack"]
     if is_hero:
         anims.append("skill")
-    for anim in anims:
-        loop = anim in ("idle", "walk")
-        body = {
-            "initial_image": local_image_uri(img_path),
-            "motion_prompt": motion_prompt(actor, anim),
-            "image_type": "sprite",
-            "frames": FRAMES,
-            "frame_size": FRAME_SIZE,
-            "model": MODEL,
-            "duration": DURATION,
-            "loop": loop,
-            "individual_frames": True,
-            "crop": True,
-            "augment_prompt": True,
-            "request_id": f"ragrogue-v2-{actor}-{anim}",
-            **margin_for(actor, anim),
-        }
-        JOBS.append(
-            {
-                "id": f"{actor}_{anim}",
-                "out": f"{ROOT}/{actor}/{anim}",
-                "body": body,
+    for facing in DIRECTIONS:
+        for anim in anims:
+            loop = anim in ("idle", "walk")
+            body = {
+                "initial_image": local_image_uri(img_path),
+                "motion_prompt": motion_prompt(actor, anim, facing),
+                "image_type": "sprite",
+                "frames": FRAMES,
+                "frame_size": FRAME_SIZE,
+                "model": MODEL,
+                "duration": DURATION,
+                "loop": loop,
+                "individual_frames": True,
+                "crop": True,
+                "augment_prompt": True,
+                "request_id": f"ragrogue-v3-{actor}-{facing}-{anim}",
+                **margin_for(actor, anim),
             }
-        )
+            JOBS.append(
+                {
+                    "id": f"{actor}_{facing}_{anim}",
+                    "out": f"{ROOT}/{actor}/{facing}/{anim}",
+                    "body": body,
+                }
+            )
 
 
 def backup_dir(out_dir: str) -> str:
