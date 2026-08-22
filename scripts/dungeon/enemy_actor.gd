@@ -33,6 +33,10 @@ func play_hit_anim() -> void:
 	_animator.play_hit()
 
 
+func refresh_motion_anim() -> void:
+	_animator.update_motion(velocity, 0.0)
+
+
 func _ready() -> void:
 	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite != null:
@@ -41,7 +45,7 @@ func _ready() -> void:
 		_apply_look()
 
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
 	_animator.update_motion(velocity, delta)
 
 

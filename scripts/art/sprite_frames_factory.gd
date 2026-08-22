@@ -17,11 +17,11 @@ const MONSTER_ACTOR := {
 }
 
 const ANIM_SPEEDS := {
-	"idle": 6.0,
-	"walk": 10.0,
-	"attack": 12.0,
-	"skill": 12.0,
-	"hit": 14.0,
+	"idle": 8.0,
+	"walk": 14.0,
+	"attack": 16.0,
+	"skill": 16.0,
+	"hit": 18.0,
 }
 
 
@@ -76,18 +76,18 @@ static func _add_anim_from_folder(
 
 static func _load_frame_textures(dir: String) -> Array:
 	var out: Array = []
-	var names: Array = _list_frame_files(dir)
-	if names.is_empty():
-		for i in 16:
-			var path := "%s/frame_%02d.webp" % [dir, i]
+	for i in 16:
+		var path := "%s/frame_%02d.webp" % [dir, i]
+		if not ResourceLoader.exists(path):
+			path = "%s/frame_%02d.png" % [dir, i]
 			if not ResourceLoader.exists(path):
-				path = "%s/frame_%02d.png" % [dir, i]
-				if not ResourceLoader.exists(path):
-					break
-			var tex := load(path) as Texture2D
-			if tex != null:
-				out.append(tex)
+				break
+		var tex := load(path) as Texture2D
+		if tex != null:
+			out.append(tex)
+	if not out.is_empty():
 		return out
+	var names: Array = _list_frame_files(dir)
 	for fname in names:
 		if not fname.begins_with("frame_"):
 			continue

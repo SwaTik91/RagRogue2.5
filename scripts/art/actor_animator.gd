@@ -33,6 +33,7 @@ func apply_sprite_frames(frames: SpriteFrames, target_height: float) -> void:
 		return
 	anim.sprite_frames = frames
 	anim.centered = true
+	anim.speed_scale = 1.0
 	var tex := frames.get_frame_texture("idle", 0)
 	if tex != null:
 		var h := float(tex.get_height())
@@ -57,12 +58,10 @@ func update_motion(velocity: Vector2, _delta: float) -> void:
 		return
 	var moving := velocity.length_squared() > 16.0
 	_apply_facing(velocity)
-	if moving:
-		if anim.animation != "walk":
-			anim.play("walk")
+	if moving and anim.sprite_frames.has_animation("walk"):
+		_play_loop("walk")
 	else:
-		if anim.animation != "idle":
-			anim.play("idle")
+		_play_loop("idle")
 
 
 func play_attack(is_skill: bool = false) -> void:
@@ -71,6 +70,8 @@ func play_attack(is_skill: bool = false) -> void:
 	var name := "skill" if is_skill else "attack"
 	if not anim.sprite_frames.has_animation(name):
 		name = "attack"
+	if not anim.sprite_frames.has_animation(name):
+		return
 	_busy = true
 	_apply_facing(_pending_motion if _pending_motion.length_squared() > 1.0 else Vector2(_facing, 0))
 	if is_skill:
@@ -91,12 +92,26 @@ func play_hit() -> void:
 func _on_animation_finished() -> void:
 	if anim == null:
 		return
-	var finished := anim.animation
+	var finished := String(anim.animation)
 	if finished in ["attack", "skill", "hit"]:
 		_busy = false
 		anim.modulate = Color.WHITE
 		var moving := _pending_motion.length_squared() > 16.0
-		anim.play("walk" if moving else "idle")
+		if moving and anim.sprite_frames.has_animation("walk"):
+			_play_loop("walk")
+		else:
+			_play_loop("idle")
+
+
+func _play_loop(name: String) -> void:
+	if anim == null or anim.sprite_frames == null:
+		return
+	if not anim.sprite_frames.has_animation(name):
+		name = "idle"
+	if not anim.sprite_frames.has_animation(name):
+		return
+	if String(anim.animation) != name:
+		anim.play(name)
 
 
 func _apply_facing(velocity: Vector2) -> void:

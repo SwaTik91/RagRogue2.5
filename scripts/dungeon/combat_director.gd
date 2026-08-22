@@ -110,7 +110,7 @@ func simulate_tick(
 	for i in enemy_cds.size():
 		tick_cds(enemy_cds[i], delta)
 	var player_attack := player_act(player_state, foes, skills, player_cds)
-	if player_attack.applied and int(player_attack.get("damage", 0)) > 0:
+	if player_attack.applied:
 		events.append({
 			"type": "player_attack",
 			"skill_id": str(player_attack.get("skill_id", "")),
@@ -158,6 +158,7 @@ func _physics_process(delta: float) -> void:
 		player.cds = player_cds
 	_write_enemy_cds(enemy_cds)
 	_chase_aggro_enemies()
+	_refresh_enemy_motion_anims()
 	if result.defeated:
 		defeated = true
 		_handle_defeat()
@@ -289,6 +290,15 @@ func _chase_aggro_enemies() -> void:
 			node.move_and_slide()
 		elif node is CharacterBody2D:
 			node.velocity = Vector2.ZERO
+
+
+func _refresh_enemy_motion_anims() -> void:
+	for node in enemies:
+		if node == null or not is_instance_valid(node):
+			continue
+		if not node.has_method("refresh_motion_anim"):
+			continue
+		node.refresh_motion_anim()
 
 
 func _spawn_float(world_pos: Vector2, text: String, color: Color) -> void:
