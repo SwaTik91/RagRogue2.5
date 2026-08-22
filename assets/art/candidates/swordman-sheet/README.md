@@ -1,3 +1,4 @@
-# Stage 3 — Swordman full-body sheet
+# Swordman candidates
 
-**Winner: v3 (S3)** → locked at `assets/art/characters/swordman/sheet.png`.
+Active pick set: **`../swordman-classic-ro/`** (classic RO vibe).
+Previous pick S3 still at `assets/art/characters/swordman/` until replaced.

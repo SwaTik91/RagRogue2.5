@@ -1,4 +1,3 @@
-# Swordman (locked)
+# Swordman
 
-- Full-body sheet: `sheet.png` (Stage 3 **v3** / S3, user pick 2026-08-21)
-- Style reference: Mage sheet v3
+Previous lock: sheet from early pick **S3** (pending replace by classic-RO pick).
