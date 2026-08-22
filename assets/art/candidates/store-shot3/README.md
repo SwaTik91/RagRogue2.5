@@ -1,2 +1,1 @@
-# store-shot3
-Pick L1–L4.
+**Winner: L3** → `assets/art/store/shot3-loot.png`

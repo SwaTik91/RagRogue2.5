@@ -1,2 +1,1 @@
-# store-shot2
-Pick K1–K4.
+**Winner: K3** → `assets/art/store/shot2-class-select.png`
