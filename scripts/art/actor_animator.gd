@@ -2,6 +2,14 @@ class_name ActorAnimator
 extends RefCounted
 ## Drives AnimatedSprite2D state machine: idle / walk / attack / skill / hit.
 
+const ANIM_IDLE := &"idle"
+const ANIM_WALK := &"walk"
+const ANIM_ATTACK := &"attack"
+const ANIM_SKILL := &"skill"
+const ANIM_HIT := &"hit"
+
+const ONE_SHOT_ANIMS: Array[StringName] = [ANIM_ATTACK, ANIM_SKILL, ANIM_HIT]
+
 var anim: AnimatedSprite2D = null
 var body: Node2D = null
 var _base_scale := Vector2.ONE
@@ -34,14 +42,14 @@ func apply_sprite_frames(frames: SpriteFrames, target_height: float) -> void:
 	anim.sprite_frames = frames
 	anim.centered = true
 	anim.speed_scale = 1.0
-	var tex := frames.get_frame_texture("idle", 0)
+	var tex := frames.get_frame_texture(ANIM_IDLE, 0)
 	if tex != null:
 		var h := float(tex.get_height())
 		if h > 0.0:
 			var s := target_height / h
 			_base_scale = Vector2(s, s)
 			anim.scale = _base_scale
-	anim.play("idle")
+	_play_sync(ANIM_IDLE)
 
 
 func capture_base_scale() -> void:
@@ -58,35 +66,33 @@ func update_motion(velocity: Vector2, _delta: float) -> void:
 		return
 	var moving := velocity.length_squared() > 16.0
 	_apply_facing(velocity)
-	if moving and anim.sprite_frames.has_animation("walk"):
-		_play_loop("walk")
+	if moving and anim.sprite_frames.has_animation(ANIM_WALK):
+		_play_loop(ANIM_WALK)
 	else:
-		_play_loop("idle")
+		_play_loop(ANIM_IDLE)
 
 
 func play_attack(is_skill: bool = false) -> void:
 	if anim == null or anim.sprite_frames == null:
 		return
-	var name := "skill" if is_skill else "attack"
+	var name: StringName = ANIM_SKILL if is_skill else ANIM_ATTACK
 	if not anim.sprite_frames.has_animation(name):
-		name = "attack"
+		name = ANIM_ATTACK
 	if not anim.sprite_frames.has_animation(name):
 		return
 	_busy = true
 	_apply_facing(_pending_motion if _pending_motion.length_squared() > 1.0 else Vector2(_facing, 0))
 	if is_skill:
 		anim.modulate = Color(1.2, 1.15, 1.05, 1)
-	anim.play(name)
-	_sync_animation_pose()
+	_play_sync(name)
 
 
 func play_hit() -> void:
 	if anim == null or anim.sprite_frames == null:
 		return
-	if anim.sprite_frames.has_animation("hit"):
+	if anim.sprite_frames.has_animation(ANIM_HIT):
 		_busy = true
-		anim.play("hit")
-		_sync_animation_pose()
+		_play_sync(ANIM_HIT)
 	else:
 		_flash_hit()
 
@@ -94,33 +100,34 @@ func play_hit() -> void:
 func _on_animation_finished() -> void:
 	if anim == null:
 		return
-	var finished := String(anim.animation)
-	if finished in ["attack", "skill", "hit"]:
+	var finished: StringName = anim.animation
+	if finished in ONE_SHOT_ANIMS:
 		_busy = false
 		anim.modulate = Color.WHITE
 		var moving := _pending_motion.length_squared() > 16.0
-		if moving and anim.sprite_frames.has_animation("walk"):
-			_play_loop("walk")
+		if moving and anim.sprite_frames.has_animation(ANIM_WALK):
+			_play_loop(ANIM_WALK)
 		else:
-			_play_loop("idle")
+			_play_loop(ANIM_IDLE)
 
 
-func _play_loop(name: String) -> void:
+func _play_loop(name: StringName) -> void:
 	if anim == null or anim.sprite_frames == null:
 		return
 	if not anim.sprite_frames.has_animation(name):
-		name = "idle"
+		name = ANIM_IDLE
 	if not anim.sprite_frames.has_animation(name):
 		return
-	if String(anim.animation) != name:
-		anim.play(name)
-		_sync_animation_pose()
+	if anim.animation != name:
+		_play_sync(name)
 
 
-func _sync_animation_pose() -> void:
-	# AnimatedSprite2D equivalent of AnimationPlayer.advance(0) — apply flip + first frame immediately.
-	if anim != null:
-		anim.set_frame_and_progress(0, 0.0)
+func _play_sync(name: StringName) -> void:
+	if anim == null:
+		return
+	anim.play(name)
+	# AnimatedSprite2D has no advance(); flush pose on the same frame (skill golden path).
+	anim.set_frame_and_progress(0, 0.0)
 
 
 func _apply_facing(velocity: Vector2) -> void:

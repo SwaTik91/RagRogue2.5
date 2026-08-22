@@ -19,6 +19,8 @@ var demo_move_active: bool = false
 
 var _animator := ActorAnimator.new()
 
+@onready var _anim_sprite: AnimatedSprite2D = $Sprite
+
 
 func _ready() -> void:
 	_setup_animator()
@@ -28,9 +30,8 @@ func _ready() -> void:
 
 
 func _setup_animator() -> void:
-	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
-	if sprite != null:
-		_animator.setup(sprite, self)
+	if _anim_sprite != null:
+		_animator.setup(_anim_sprite, self)
 
 
 func play_combat_anim(is_skill: bool = false) -> void:
@@ -208,8 +209,7 @@ func _make_camera_current() -> void:
 
 
 func _apply_look() -> void:
-	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
-	if sprite == null:
+	if _anim_sprite == null:
 		return
 	var frames := SpriteFramesFactory.player_frames(class_id)
 	if frames == null:

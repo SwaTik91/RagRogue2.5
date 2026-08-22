@@ -11,6 +11,8 @@ var move_speed: float = 80.0
 var cds: Dictionary = {}
 var _animator := ActorAnimator.new()
 
+@onready var _anim_sprite: AnimatedSprite2D = $Sprite
+
 
 func bind_monster(def: Dictionary) -> void:
 	monster_id = str(def.get("id", ""))
@@ -38,9 +40,8 @@ func refresh_motion_anim() -> void:
 
 
 func _ready() -> void:
-	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
-	if sprite != null:
-		_animator.setup(sprite, self)
+	if _anim_sprite != null:
+		_animator.setup(_anim_sprite, self)
 	if monster_id != "":
 		_apply_look()
 
@@ -63,8 +64,7 @@ func refresh_alive() -> void:
 
 
 func _apply_look() -> void:
-	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
-	if sprite == null:
+	if _anim_sprite == null:
 		return
 	var frames := SpriteFramesFactory.monster_frames(monster_id)
 	if frames != null:
