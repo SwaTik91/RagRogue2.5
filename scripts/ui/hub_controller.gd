@@ -8,6 +8,12 @@ extends Control
 @onready var toast_label: Label = get_node_or_null("%ToastLabel") as Label
 @onready var gear_label: Label = get_node_or_null("%GearLabel") as Label
 @onready var skills_label: Label = get_node_or_null("%SkillsLabel") as Label
+@onready var swordman_portrait: TextureRect = get_node_or_null("%SwordmanPortrait") as TextureRect
+@onready var mage_portrait: TextureRect = get_node_or_null("%MagePortrait") as TextureRect
+@onready var archer_portrait: TextureRect = get_node_or_null("%ArcherPortrait") as TextureRect
+
+const SELECTED_MODULATE := Color(1, 1, 1, 1)
+const IDLE_MODULATE := Color(0.55, 0.58, 0.62, 1)
 
 
 func _ready() -> void:
@@ -112,6 +118,24 @@ func _refresh_hero_panel() -> void:
 		gear_label.text = equipped_summary(hero)
 	if skills_label != null:
 		skills_label.text = skills_summary(hero)
+	_refresh_class_selection(int(session.active_class))
+
+
+func _refresh_class_selection(active_class: int) -> void:
+	_set_portrait_state(swordman_portrait, swordman_button, active_class == ClassId.Value.SWORDMAN)
+	_set_portrait_state(mage_portrait, mage_button, active_class == ClassId.Value.MAGE)
+	_set_portrait_state(archer_portrait, archer_button, active_class == ClassId.Value.ARCHER)
+
+
+func _set_portrait_state(portrait: TextureRect, button: Button, selected: bool) -> void:
+	if portrait != null:
+		portrait.modulate = SELECTED_MODULATE if selected else IDLE_MODULATE
+	if button != null:
+		button.disabled = false
+		if selected:
+			button.add_theme_color_override("font_color", Color(0.95, 0.92, 0.55, 1))
+		else:
+			button.remove_theme_color_override("font_color")
 
 
 func _game_session() -> Node:
