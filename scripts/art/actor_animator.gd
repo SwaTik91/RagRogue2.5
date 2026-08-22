@@ -77,6 +77,7 @@ func play_attack(is_skill: bool = false) -> void:
 	if is_skill:
 		anim.modulate = Color(1.2, 1.15, 1.05, 1)
 	anim.play(name)
+	_sync_animation_pose()
 
 
 func play_hit() -> void:
@@ -85,6 +86,7 @@ func play_hit() -> void:
 	if anim.sprite_frames.has_animation("hit"):
 		_busy = true
 		anim.play("hit")
+		_sync_animation_pose()
 	else:
 		_flash_hit()
 
@@ -112,6 +114,13 @@ func _play_loop(name: String) -> void:
 		return
 	if String(anim.animation) != name:
 		anim.play(name)
+		_sync_animation_pose()
+
+
+func _sync_animation_pose() -> void:
+	# AnimatedSprite2D equivalent of AnimationPlayer.advance(0) — apply flip + first frame immediately.
+	if anim != null:
+		anim.set_frame_and_progress(0, 0.0)
 
 
 func _apply_facing(velocity: Vector2) -> void:
