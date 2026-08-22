@@ -21,9 +21,9 @@ var _animator := ActorAnimator.new()
 
 
 func _ready() -> void:
+	_setup_animator()
 	_bind_active_hero()
 	_make_camera_current()
-	_setup_animator()
 	call_deferred("_resolve_stick")
 
 

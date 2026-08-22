@@ -76,11 +76,18 @@ static func _add_anim_from_folder(
 
 static func _load_frame_textures(dir: String) -> Array:
 	var out: Array = []
-	var abs := ProjectSettings.globalize_path(dir)
-	if abs == "" or not DirAccess.dir_exists_absolute(abs):
+	var names: Array = _list_frame_files(dir)
+	if names.is_empty():
+		for i in 16:
+			var path := "%s/frame_%02d.webp" % [dir, i]
+			if not ResourceLoader.exists(path):
+				path = "%s/frame_%02d.png" % [dir, i]
+				if not ResourceLoader.exists(path):
+					break
+			var tex := load(path) as Texture2D
+			if tex != null:
+				out.append(tex)
 		return out
-	var names := DirAccess.get_files_at(abs)
-	names.sort()
 	for fname in names:
 		if not fname.begins_with("frame_"):
 			continue
@@ -91,6 +98,20 @@ static func _load_frame_textures(dir: String) -> Array:
 		if tex != null:
 			out.append(tex)
 	return out
+
+
+static func _list_frame_files(dir: String) -> Array:
+	var names: Array = []
+	if DirAccess.dir_exists_absolute(dir):
+		names = Array(DirAccess.get_files_at(dir))
+	elif ResourceLoader.exists(dir):
+		names = Array(DirAccess.get_files_at(dir))
+	else:
+		var abs := ProjectSettings.globalize_path(dir)
+		if abs != "" and DirAccess.dir_exists_absolute(abs):
+			names = Array(DirAccess.get_files_at(abs))
+	names.sort()
+	return names
 
 
 static func _fallback_frames(actor: String, is_hero: bool) -> SpriteFrames:

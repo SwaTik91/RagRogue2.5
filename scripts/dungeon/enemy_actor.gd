@@ -37,6 +37,8 @@ func _ready() -> void:
 	var sprite := get_node_or_null("Sprite") as AnimatedSprite2D
 	if sprite != null:
 		_animator.setup(sprite, self)
+	if monster_id != "":
+		_apply_look()
 
 
 func _physics_process(delta: float) -> void:

@@ -8,6 +8,8 @@ var _base_scale := Vector2.ONE
 var _facing := 1.0
 var _busy := false
 var _pending_motion := Vector2.ZERO
+var _pending_frames: SpriteFrames = null
+var _pending_height := 0.0
 
 
 func setup(animated_sprite: AnimatedSprite2D, body_node: Node2D = null) -> void:
@@ -17,10 +19,17 @@ func setup(animated_sprite: AnimatedSprite2D, body_node: Node2D = null) -> void:
 		_base_scale = anim.scale
 		if not anim.animation_finished.is_connected(_on_animation_finished):
 			anim.animation_finished.connect(_on_animation_finished)
+	if _pending_frames != null:
+		apply_sprite_frames(_pending_frames, _pending_height)
+		_pending_frames = null
 
 
 func apply_sprite_frames(frames: SpriteFrames, target_height: float) -> void:
-	if anim == null or frames == null:
+	if frames == null:
+		return
+	if anim == null:
+		_pending_frames = frames
+		_pending_height = target_height
 		return
 	anim.sprite_frames = frames
 	anim.centered = true
