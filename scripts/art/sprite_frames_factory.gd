@@ -16,16 +16,14 @@ const MONSTER_ACTOR := {
 	"act_boss": "vault_warden",
 }
 
-## Baseline fps tuned for 9-frame Ludo cycles; scaled by frame count at load time.
+## Playback fps (SpriteFrames animation_speed). Do NOT also pass short per-frame durations.
 const ANIM_SPEEDS := {
-	"idle": 8.0,
-	"walk": 14.0,
-	"attack": 16.0,
-	"skill": 16.0,
-	"hit": 18.0,
+	"idle": 6.0,
+	"walk": 10.0,
+	"attack": 14.0,
+	"skill": 14.0,
+	"hit": 16.0,
 }
-
-const BASELINE_FRAME_COUNT := 9.0
 
 
 static func player_frames(class_id: int) -> SpriteFrames:
@@ -67,24 +65,15 @@ static func _add_anim_from_folder(
 	var textures := _load_frame_textures(dir)
 	if textures.is_empty():
 		return false
-	textures = _normalize_textures(textures)
 	frames.add_animation(anim_name)
 	var loop := anim_name in ["idle", "walk"]
 	frames.set_animation_loop(anim_name, loop)
-	var frame_count := textures.size()
-	var speed := _speed_for_frame_count(anim_name, frame_count)
+	var speed := float(ANIM_SPEEDS.get(anim_name, 8.0))
 	frames.set_animation_speed(anim_name, speed)
-	var step := 0.09 if anim_name == "walk" else 0.08
 	for tex in textures:
-		frames.add_frame(anim_name, tex, step)
+		# Default frame duration (1.0); speed alone controls fps — avoids 10x+ jitter.
+		frames.add_frame(anim_name, tex)
 	return true
-
-
-static func _speed_for_frame_count(anim_name: String, frame_count: int) -> float:
-	var base := float(ANIM_SPEEDS.get(anim_name, 8.0))
-	if frame_count <= 0:
-		return base
-	return base * (float(frame_count) / BASELINE_FRAME_COUNT)
 
 
 static func _load_frame_textures(dir: String) -> Array:
@@ -155,50 +144,6 @@ static func _load_sheet_frames(dir: String) -> Array:
 		atlas.region = Rect2(col * cell_w, row * cell_h, cell_w, cell_h)
 		out.append(atlas)
 	return out
-
-
-static func _normalize_textures(textures: Array) -> Array:
-	if textures.is_empty():
-		return textures
-	var max_w := 0
-	var max_h := 0
-	for tex in textures:
-		if not (tex is Texture2D):
-			continue
-		var size: Vector2 = (tex as Texture2D).get_size()
-		max_w = maxi(max_w, int(size.x))
-		max_h = maxi(max_h, int(size.y))
-	if max_w <= 0 or max_h <= 0:
-		return textures
-	var needs_norm := false
-	for tex in textures:
-		if not (tex is Texture2D):
-			continue
-		var size: Vector2 = (tex as Texture2D).get_size()
-		if int(size.x) != max_w or int(size.y) != max_h:
-			needs_norm = true
-			break
-	if not needs_norm:
-		return textures
-	var out: Array = []
-	for tex in textures:
-		if tex is Texture2D:
-			out.append(_center_texture(tex as Texture2D, max_w, max_h))
-	return out
-
-
-static func _center_texture(tex: Texture2D, canvas_w: int, canvas_h: int) -> Texture2D:
-	var img := tex.get_image()
-	if img == null or img.is_empty():
-		return tex
-	var canvas := Image.create(canvas_w, canvas_h, false, img.get_format())
-	canvas.fill(Color(0, 0, 0, 0))
-	var offset := Vector2i(
-		(canvas_w - img.get_width()) / 2,
-		(canvas_h - img.get_height()) / 2
-	)
-	canvas.blit_rect(img, Rect2i(Vector2i.ZERO, img.get_size()), offset)
-	return ImageTexture.create_from_image(canvas)
 
 
 static func _list_frame_files(dir: String) -> Array:

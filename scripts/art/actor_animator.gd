@@ -125,8 +125,9 @@ func _play_loop(name: StringName) -> void:
 func _play_sync(name: StringName) -> void:
 	if anim == null:
 		return
+	if anim.animation == name and anim.is_playing():
+		return
 	anim.play(name)
-	# AnimatedSprite2D has no advance(); flush pose on the same frame (skill golden path).
 	anim.set_frame_and_progress(0, 0.0)
 
 

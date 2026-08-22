@@ -158,7 +158,6 @@ func _physics_process(delta: float) -> void:
 		player.cds = player_cds
 	_write_enemy_cds(enemy_cds)
 	_chase_aggro_enemies()
-	_refresh_enemy_motion_anims()
 	if result.defeated:
 		defeated = true
 		_handle_defeat()
