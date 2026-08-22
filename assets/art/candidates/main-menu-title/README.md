@@ -1,7 +1,8 @@
-# Main menu — TITLE ONLY (active)
+# Main menu — title only
 
-Pure title/main menu concepts. **No class select.**
+**Winner: M1** → locked + cleaned backdrop in `assets/art/ui/`.
 
-Hero select stays on Hub separately.
-
-Pick **M1–M4**.
+Real scene: `scenes/main_menu/main_menu.tscn`
+- Играть → dungeon
+- Герои → hub (class select)
+- Настройки → stub toast

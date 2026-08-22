@@ -11,6 +11,7 @@ extends Control
 @onready var swordman_portrait: TextureRect = get_node_or_null("%SwordmanPortrait") as TextureRect
 @onready var mage_portrait: TextureRect = get_node_or_null("%MagePortrait") as TextureRect
 @onready var archer_portrait: TextureRect = get_node_or_null("%ArcherPortrait") as TextureRect
+@onready var back_button: Button = get_node_or_null("%BackButton") as Button
 
 const SELECTED_MODULATE := Color(1, 1, 1, 1)
 const IDLE_MODULATE := Color(0.55, 0.58, 0.62, 1)
@@ -25,9 +26,14 @@ func _ready() -> void:
 		archer_button.pressed.connect(func() -> void: select_class(ClassId.Value.ARCHER))
 	if enter_button != null:
 		enter_button.pressed.connect(enter_dungeon)
+	if back_button != null:
+		back_button.pressed.connect(_on_back)
 	_refresh_hero_panel()
 	_show_toast(consume_pending_toast())
 
+
+func _on_back() -> void:
+	get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn")
 
 func select_class(class_id: int) -> void:
 	var session := _game_session()
