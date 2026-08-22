@@ -22,17 +22,17 @@ const PLAYER_GAME_IDLE_PATHS := {
 }
 
 const MONSTER_PATHS := {
-	"cave_slime": "res://assets/art/characters/monsters/cave-slime.png",
-	"stone_beetle": "res://assets/art/characters/monsters/stone-beetle.png",
-	"act_boss": "res://assets/art/characters/monsters/vault-warden.png",
+	"cave_slime": "res://assets/art/game/cave-slime.png",
+	"stone_beetle": "res://assets/art/game/stone-beetle.png",
+	"act_boss": "res://assets/art/game/vault-warden.png",
 }
 
 
 static func player_idle_path(class_id: int) -> String:
-	var path := str(PLAYER_IDLE_PATHS.get(class_id, PLAYER_IDLE_PATHS[ClassId.Value.SWORDMAN]))
+	var path := str(PLAYER_GAME_IDLE_PATHS.get(class_id, PLAYER_GAME_IDLE_PATHS[ClassId.Value.SWORDMAN]))
 	if ResourceLoader.exists(path):
 		return path
-	return str(PLAYER_GAME_IDLE_PATHS.get(class_id, PLAYER_GAME_IDLE_PATHS[ClassId.Value.SWORDMAN]))
+	return str(PLAYER_IDLE_PATHS.get(class_id, PLAYER_IDLE_PATHS[ClassId.Value.SWORDMAN]))
 
 
 static func player_texture(class_id: int) -> Texture2D:

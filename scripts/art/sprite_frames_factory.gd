@@ -1,121 +1,124 @@
 class_name SpriteFramesFactory
 extends RefCounted
-## Build SpriteFrames from idle cutouts — each frame is a baked texture offset.
-
-const WALK_OFFSETS := [
-	Vector2(0, 0),
-	Vector2(0, -6),
-	Vector2(0, -2),
-	Vector2(0, -7),
-]
-const ATTACK_OFFSETS := [
-	Vector2(0, 0),
-	Vector2(10, -2),
-	Vector2(18, -4),
-	Vector2(8, -1),
-]
-const SKILL_OFFSETS := [
-	Vector2(0, -2),
-	Vector2(6, -6),
-	Vector2(14, -10),
-	Vector2(20, -8),
-	Vector2(10, -4),
-]
-const HIT_OFFSETS := [Vector2(-4, 0), Vector2(4, 0), Vector2(0, 0)]
-const SLIME_ATTACK_OFFSETS := [
-	Vector2(0, 0), Vector2(6, -1), Vector2(12, -2), Vector2(4, 0),
-]
+## Load Ludo-generated frame sequences from assets/art/anim/{actor}/{anim}/
 
 static var _cache: Dictionary = {}
 
+const ACTOR_FOR_CLASS := {
+	ClassId.Value.SWORDMAN: "swordman",
+	ClassId.Value.MAGE: "mage",
+	ClassId.Value.ARCHER: "archer",
+}
+
+const MONSTER_ACTOR := {
+	"cave_slime": "cave_slime",
+	"stone_beetle": "stone_beetle",
+	"act_boss": "vault_warden",
+}
+
+const ANIM_SPEEDS := {
+	"idle": 6.0,
+	"walk": 10.0,
+	"attack": 12.0,
+	"skill": 12.0,
+	"hit": 14.0,
+}
+
 
 static func player_frames(class_id: int) -> SpriteFrames:
-	var key := "player_%d" % class_id
-	if _cache.has(key):
-		return _cache[key] as SpriteFrames
-	var path := SpriteCatalog.player_idle_path(class_id)
-	var tex := SpriteCatalog._load_texture(path)
-	if tex == null:
-		return null
-	var frames := _build_actor_frames(tex, 0.11, 0.07, true)
-	_cache[key] = frames
-	return frames
+	var actor := str(ACTOR_FOR_CLASS.get(class_id, "mage"))
+	return _actor_frames(actor, true)
 
 
 static func monster_frames(monster_id: String) -> SpriteFrames:
-	var key := "monster_%s" % monster_id
+	var actor := str(MONSTER_ACTOR.get(monster_id, "cave_slime"))
+	return _actor_frames(actor, false)
+
+
+static func _actor_frames(actor: String, is_hero: bool) -> SpriteFrames:
+	var key := "%s_%s" % [actor, "hero" if is_hero else "mob"]
 	if _cache.has(key):
 		return _cache[key] as SpriteFrames
-	var tex := SpriteCatalog.monster_texture(monster_id)
-	if tex == null:
-		return null
-	var walk_step := 0.13
-	var attack_step := 0.08
-	if monster_id == "act_boss":
-		walk_step = 0.16
-		attack_step = 0.1
-	var frames := _build_actor_frames(tex, walk_step, attack_step, monster_id != "cave_slime")
+	var anims := ["idle", "walk", "attack"]
+	if is_hero:
+		anims.append("skill")
+	var frames := SpriteFrames.new()
+	var any := false
+	for anim_name in anims:
+		var added := _add_anim_from_folder(frames, anim_name, actor, anim_name)
+		if added:
+			any = true
+	if not any:
+		return _fallback_frames(actor, is_hero)
 	_cache[key] = frames
 	return frames
 
 
-static func _build_actor_frames(
-	tex: Texture2D,
-	walk_step: float,
-	attack_step: float,
-	is_humanoid: bool
-) -> SpriteFrames:
-	var frames := SpriteFrames.new()
-
-	frames.add_animation("idle")
-	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", 3.0)
-	_add_offset_frames(frames, "idle", tex, 0.35, [Vector2(0, 0), Vector2(0, -2)])
-
-	frames.add_animation("walk")
-	frames.set_animation_loop("walk", true)
-	frames.set_animation_speed("walk", 1.0)
-	_add_offset_frames(frames, "walk", tex, walk_step, WALK_OFFSETS)
-
-	frames.add_animation("attack")
-	frames.set_animation_loop("attack", false)
-	frames.set_animation_speed("attack", 1.0)
-	var atk := ATTACK_OFFSETS if is_humanoid else SLIME_ATTACK_OFFSETS
-	_add_offset_frames(frames, "attack", tex, attack_step, atk)
-
-	frames.add_animation("skill")
-	frames.set_animation_loop("skill", false)
-	frames.set_animation_speed("skill", 1.0)
-	_add_offset_frames(frames, "skill", tex, attack_step * 0.85, SKILL_OFFSETS)
-
-	frames.add_animation("hit")
-	frames.set_animation_loop("hit", false)
-	frames.set_animation_speed("hit", 1.0)
-	_add_offset_frames(frames, "hit", tex, 0.06, HIT_OFFSETS)
-
-	return frames
-
-
-static func _add_offset_frames(
+static func _add_anim_from_folder(
 	frames: SpriteFrames,
 	anim_name: String,
-	source: Texture2D,
-	duration: float,
-	offsets: Array
-) -> void:
-	for off in offsets:
-		var baked := _offset_texture(source, off as Vector2)
-		frames.add_frame(anim_name, baked, duration)
+	actor: String,
+	folder_anim: String
+) -> bool:
+	var dir := "res://assets/art/anim/%s/%s" % [actor, folder_anim]
+	var textures := _load_frame_textures(dir)
+	if textures.is_empty():
+		return false
+	frames.add_animation(anim_name)
+	var loop := anim_name in ["idle", "walk"]
+	frames.set_animation_loop(anim_name, loop)
+	frames.set_animation_speed(anim_name, float(ANIM_SPEEDS.get(anim_name, 8.0)))
+	var step := 0.09 if anim_name == "walk" else 0.08
+	for tex in textures:
+		frames.add_frame(anim_name, tex, step)
+	return true
 
 
-static func _offset_texture(tex: Texture2D, offset: Vector2) -> Texture2D:
-	var src := tex.get_image()
-	if src == null:
-		return tex
-	var w := src.get_width()
-	var h := src.get_height()
-	var dst := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	dst.fill(Color(0, 0, 0, 0))
-	var blit_pos := Vector2i(int(offset.x), int(offset.y))
-	dst.blit_rect(src, Rect2i(0, 0, w, h), blit_pos)
-	return ImageTexture.create_from_image(dst)
+static func _load_frame_textures(dir: String) -> Array:
+	var out: Array = []
+	var abs := ProjectSettings.globalize_path(dir)
+	if abs == "" or not DirAccess.dir_exists_absolute(abs):
+		return out
+	var names := DirAccess.get_files_at(abs)
+	names.sort()
+	for fname in names:
+		if not fname.begins_with("frame_"):
+			continue
+		if not (fname.ends_with(".png") or fname.ends_with(".webp")):
+			continue
+		var path := "%s/%s" % [dir, fname]
+		var tex := load(path) as Texture2D
+		if tex != null:
+			out.append(tex)
+	return out
+
+
+static func _fallback_frames(actor: String, is_hero: bool) -> SpriteFrames:
+	var tex: Texture2D = null
+	if is_hero:
+		for cid in ACTOR_FOR_CLASS.keys():
+			if ACTOR_FOR_CLASS[cid] == actor:
+				tex = SpriteCatalog.player_texture(cid)
+				break
+	else:
+		for mid in MONSTER_ACTOR.keys():
+			if MONSTER_ACTOR[mid] == actor:
+				tex = SpriteCatalog.monster_texture(mid)
+				break
+	if tex == null:
+		return null
+	var frames := SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.set_animation_loop("idle", true)
+	frames.add_frame("idle", tex, 0.5)
+	frames.add_animation("walk")
+	frames.set_animation_loop("walk", true)
+	frames.add_frame("walk", tex, 0.12)
+	frames.add_animation("attack")
+	frames.set_animation_loop("attack", false)
+	frames.add_frame("attack", tex, 0.1)
+	if is_hero:
+		frames.add_animation("skill")
+		frames.set_animation_loop("skill", false)
+		frames.add_frame("skill", tex, 0.08)
+	return frames
