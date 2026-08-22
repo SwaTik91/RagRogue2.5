@@ -1,3 +1,1 @@
-# vault-warden
-
-Pick VW1–VW4.
+**Winner: VW2** → `assets/art/characters/monsters/vault-warden.png`

@@ -1,3 +1,1 @@
-# archer-idle
-
-Pick AI1–AI4.
+**Winner: AI3** → `assets/art/characters/archer/idle.png`

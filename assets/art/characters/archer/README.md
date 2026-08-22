@@ -1,4 +1,4 @@
 # Archer (locked)
 
-- Full-body sheet: `sheet.png` (classic-RO **A2** hunter, user pick 2026-08-21)
-- Male, classic RO vibe; original IP
+- Sheet: `sheet.png` (classic-RO **A2** hunter)
+- Idle sprite: `idle.png` (**AI3** / AL3)

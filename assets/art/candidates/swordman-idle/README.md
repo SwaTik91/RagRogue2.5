@@ -1,3 +1,1 @@
-# swordman-idle
-
-Pick SI1–SI4.
+**Winner: SI2** → `assets/art/characters/swordman/idle.png`

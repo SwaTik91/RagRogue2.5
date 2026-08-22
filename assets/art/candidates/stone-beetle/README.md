@@ -1,3 +1,1 @@
-# stone-beetle
-
-Pick SB1–SB4.
+**Winner: SB2** → `assets/art/characters/monsters/stone-beetle.png`

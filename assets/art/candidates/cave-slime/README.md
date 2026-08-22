@@ -1,3 +1,1 @@
-# cave-slime
-
-Pick SL1–SL4.
+**Winner: SL1** → `assets/art/characters/monsters/cave-slime.png`
