@@ -13,8 +13,12 @@ script = ExtResource("1_pc")
 shape = SubResource("CircleShape2D_body")
 
 [node name="Body" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.42, 0.55, 0.92, 1)
 polygon = PackedVector2Array(0, -16, 12, -6, 10, 14, -10, 14, -12, -6)
+
+[node name="Sprite" type="Sprite2D" parent="."]
+z_index = 1
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true

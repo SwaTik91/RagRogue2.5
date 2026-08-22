@@ -1,8 +1,8 @@
-# Store media (locked)
+# Store media
 
-- `shot-1.png` — combat (C3)
-- `shot-2.png` — class select (K3)
-- `shot-3.png` — loot (L3)
-- `combat-loop.mp4` — optional store video (Ludo marketing loop from Shot1)
+- `shot-1.png` … `shot-3.png` — locked AppGallery stills (C3/K3/L3)
+- `combat-loop.mp4` — **real Godot gameplay** capture (Mage + sprites, 8s landscape)
+- `combat-loop-gameplay.mp4` — longer raw capture
+- `combat-loop-ludo-promo.mp4` — earlier Ludo marketing animation (not in-engine)
 
-**Note:** `combat-loop.mp4` is promotional art animation, not a capture of the live Godot build (in-game entities are still Polygon2D placeholders until sprites are wired).
+Capture boot: `res://scenes/demo/capture_boot.tscn` with `--rendering-driver opengl3 --write-movie`.

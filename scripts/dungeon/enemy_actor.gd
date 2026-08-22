@@ -38,9 +38,22 @@ func refresh_alive() -> void:
 
 
 func _apply_look() -> void:
+	var sprite := get_node_or_null("Sprite") as Sprite2D
+	var tex := SpriteCatalog.monster_texture(monster_id)
+	if sprite != null and tex != null:
+		var target := SpriteCatalog.BOSS_TARGET_HEIGHT if monster_id == "act_boss" else SpriteCatalog.ENEMY_TARGET_HEIGHT
+		if monster_id == "cave_slime":
+			target = 48.0
+		SpriteCatalog.fit_sprite(sprite, tex, target)
+		var poly := get_node_or_null("Body") as Polygon2D
+		if poly != null:
+			poly.visible = false
+		scale = Vector2.ONE
+		return
 	var body := get_node_or_null("Body") as Polygon2D
 	if body == null:
 		return
+	body.visible = true
 	match monster_id:
 		"stone_beetle":
 			body.color = Color(0.55, 0.38, 0.22, 1)

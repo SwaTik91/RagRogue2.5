@@ -13,5 +13,9 @@ script = ExtResource("1_enemy")
 shape = SubResource("CircleShape2D_body")
 
 [node name="Body" type="Polygon2D" parent="."]
+visible = false
 color = Color(0.38, 0.72, 0.42, 1)
 polygon = PackedVector2Array(0, -14, 12, -4, 10, 12, -10, 12, -12, -4)
+
+[node name="Sprite" type="Sprite2D" parent="."]
+z_index = 1

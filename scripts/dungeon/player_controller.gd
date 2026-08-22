@@ -13,12 +13,24 @@ var skills: Array = []
 var cds: Dictionary = {}
 var _move_vector: Vector2 = Vector2.ZERO
 var _stick: Node = null
+var demo_move_override: Vector2 = Vector2.ZERO
+var demo_move_active: bool = false
 
 
 func _ready() -> void:
 	_bind_active_hero()
 	_make_camera_current()
 	call_deferred("_resolve_stick")
+
+
+func set_demo_move(v: Vector2) -> void:
+	demo_move_active = true
+	demo_move_override = v.limit_length(1.0)
+
+
+func clear_demo_move() -> void:
+	demo_move_active = false
+	demo_move_override = Vector2.ZERO
 
 
 func bind_hero(hero: Hero, modifiers: Array = []) -> void:
@@ -29,6 +41,7 @@ func bind_hero(hero: Hero, modifiers: Array = []) -> void:
 	class_id = hero.class_id
 	skills = _load_class_skills(hero)
 	cds.clear()
+	_apply_look()
 
 
 func apply_run_stats(hero: Hero, modifiers: Array = []) -> void:
@@ -81,9 +94,12 @@ func editor_keyboard_vector() -> Vector2:
 
 
 func _physics_process(_delta: float) -> void:
-	var stick_v := _stick_vector()
-	var key_v := editor_keyboard_vector()
-	set_move_vector(combine_move_vector(stick_v, key_v, OS.has_feature(EDITOR_FEATURE)))
+	if demo_move_active:
+		set_move_vector(demo_move_override)
+	else:
+		var stick_v := _stick_vector()
+		var key_v := editor_keyboard_vector()
+		set_move_vector(combine_move_vector(stick_v, key_v, OS.has_feature(EDITOR_FEATURE)))
 	velocity = compute_velocity()
 	move_and_slide()
 
@@ -170,3 +186,19 @@ func _make_camera_current() -> void:
 	cam.enabled = true
 	cam.position_smoothing_enabled = true
 	cam.make_current()
+
+
+func _apply_look() -> void:
+	var sprite := get_node_or_null("Sprite") as Sprite2D
+	if sprite == null:
+		return
+	var tex := SpriteCatalog.player_texture(class_id)
+	if tex == null:
+		var body := get_node_or_null("Body") as Polygon2D
+		if body != null:
+			body.visible = true
+		return
+	SpriteCatalog.fit_sprite(sprite, tex, SpriteCatalog.PLAYER_TARGET_HEIGHT)
+	var poly := get_node_or_null("Body") as Polygon2D
+	if poly != null:
+		poly.visible = false
