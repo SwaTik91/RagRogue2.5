@@ -9,6 +9,7 @@ var defense: int = 0
 var tier: int = 1
 var move_speed: float = 80.0
 var cds: Dictionary = {}
+var _visual := ActorVisual.new()
 
 
 func bind_monster(def: Dictionary) -> void:
@@ -22,6 +23,24 @@ func bind_monster(def: Dictionary) -> void:
 	cds.clear()
 	_apply_look()
 	refresh_alive()
+
+
+func play_combat_anim(is_skill: bool = false) -> void:
+	_visual.play_attack(is_skill)
+
+
+func play_hit_anim() -> void:
+	_visual.play_hit()
+
+
+func _ready() -> void:
+	var sprite := get_node_or_null("Sprite") as Sprite2D
+	if sprite != null:
+		_visual.setup(sprite, self)
+
+
+func _physics_process(delta: float) -> void:
+	_visual.update_motion(velocity, delta)
 
 
 func to_combatant() -> Dictionary:
@@ -41,10 +60,9 @@ func _apply_look() -> void:
 	var sprite := get_node_or_null("Sprite") as Sprite2D
 	var tex := SpriteCatalog.monster_texture(monster_id)
 	if sprite != null and tex != null:
-		var target := SpriteCatalog.BOSS_TARGET_HEIGHT if monster_id == "act_boss" else SpriteCatalog.ENEMY_TARGET_HEIGHT
-		if monster_id == "cave_slime":
-			target = 48.0
+		var target := SpriteCatalog.target_height_for_monster(monster_id)
 		SpriteCatalog.fit_sprite(sprite, tex, target)
+		_visual.capture_base_scale()
 		var poly := get_node_or_null("Body") as Polygon2D
 		if poly != null:
 			poly.visible = false

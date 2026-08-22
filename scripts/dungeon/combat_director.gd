@@ -105,13 +105,27 @@ func simulate_tick(
 	enemy_cds: Array,
 	delta: float
 ) -> Dictionary:
+	var events: Array = []
 	tick_cds(player_cds, delta)
 	for i in enemy_cds.size():
 		tick_cds(enemy_cds[i], delta)
-	player_act(player_state, foes, skills, player_cds)
+	var player_attack := player_act(player_state, foes, skills, player_cds)
+	if player_attack.applied and int(player_attack.get("damage", 0)) > 0:
+		events.append({
+			"type": "player_attack",
+			"skill_id": str(player_attack.get("skill_id", "")),
+			"target_index": int(player_attack.get("target_index", -1)),
+			"damage": int(player_attack.get("damage", 0)),
+		})
 	for i in foes.size():
 		var ecds: Dictionary = enemy_cds[i] if i < enemy_cds.size() else {}
-		enemy_act(foes[i], player_state, ecds)
+		var enemy_attack := enemy_act(foes[i], player_state, ecds)
+		if enemy_attack.applied:
+			events.append({
+				"type": "enemy_attack",
+				"enemy_index": i,
+				"damage": int(enemy_attack.get("damage", 0)),
+			})
 	var any_alive := false
 	for foe in foes:
 		if float(foe.get("hp", 0.0)) > 0.0:
@@ -121,7 +135,8 @@ func simulate_tick(
 	return {
 		"player_hp": player_state.hp,
 		"defeated": is_defeated,
-		"room_cleared": (not any_alive) and foes.size() > 0 and not is_defeated
+		"room_cleared": (not any_alive) and foes.size() > 0 and not is_defeated,
+		"events": events,
 	}
 
 
@@ -138,6 +153,7 @@ func _physics_process(delta: float) -> void:
 	var result := simulate_tick(player_state, foes, skills, player_cds, enemy_cds, delta)
 	_write_player(player_state)
 	_write_enemies(foes)
+	_play_combat_events(result.get("events", []))
 	if "cds" in player:
 		player.cds = player_cds
 	_write_enemy_cds(enemy_cds)
@@ -210,6 +226,8 @@ func _write_player(player_state: Dictionary) -> void:
 	player.hp = float(player_state.hp)
 	if player.hp < before:
 		_spawn_float(player.position, "-%d" % int(before - player.hp), Color(1, 0.45, 0.4))
+		if player.has_method("play_hit_anim"):
+			player.play_hit_anim()
 
 
 func _write_enemies(foes: Array) -> void:
@@ -221,8 +239,27 @@ func _write_enemies(foes: Array) -> void:
 		node.hp = float(foe.hp)
 		if node.hp < before:
 			_spawn_float(node.position, "-%d" % int(before - node.hp), Color(1, 0.86, 0.35))
+			if node.has_method("play_hit_anim"):
+				node.play_hit_anim()
 		if node.has_method("refresh_alive"):
 			node.refresh_alive()
+
+
+func _play_combat_events(events: Array) -> void:
+	for ev in events:
+		if not (ev is Dictionary):
+			continue
+		var kind := str(ev.get("type", ""))
+		if kind == "player_attack":
+			if player != null and player.has_method("play_combat_anim"):
+				var skill_id := str(ev.get("skill_id", ""))
+				player.play_combat_anim(skill_id != "")
+		elif kind == "enemy_attack":
+			var idx := int(ev.get("enemy_index", -1))
+			if idx >= 0 and idx < enemies.size():
+				var node = enemies[idx]
+				if node != null and node.has_method("play_combat_anim"):
+					node.play_combat_anim(false)
 
 
 func _write_enemy_cds(enemy_cds: Array) -> void:

@@ -10,6 +10,7 @@ var _upgrade_modal: Node = null
 
 
 func _ready() -> void:
+	RoMapBuilder.build(self)
 	_monster_table = _load_monster_table()
 	_player = get_node_or_null("Player")
 	_director = get_node_or_null("CombatDirector")

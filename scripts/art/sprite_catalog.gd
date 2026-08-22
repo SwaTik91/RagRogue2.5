@@ -1,9 +1,12 @@
 class_name SpriteCatalog
 extends RefCounted
 
-const PLAYER_TARGET_HEIGHT := 64.0
-const ENEMY_TARGET_HEIGHT := 56.0
-const BOSS_TARGET_HEIGHT := 96.0
+const SCALE_BOOST := 1.7
+
+const PLAYER_TARGET_HEIGHT := 64.0 * SCALE_BOOST
+const ENEMY_TARGET_HEIGHT := 56.0 * SCALE_BOOST
+const BOSS_TARGET_HEIGHT := 96.0 * SCALE_BOOST
+const SLIME_TARGET_HEIGHT := 48.0 * SCALE_BOOST
 
 const PLAYER_PATHS := {
 	ClassId.Value.SWORDMAN: "res://assets/art/game/swordman-idle.png",
@@ -38,6 +41,14 @@ static func fit_sprite(sprite: Sprite2D, texture: Texture2D, target_height: floa
 		return
 	var s := target_height / h
 	sprite.scale = Vector2(s, s)
+
+
+static func target_height_for_monster(monster_id: String) -> float:
+	if monster_id == "act_boss":
+		return BOSS_TARGET_HEIGHT
+	if monster_id == "cave_slime":
+		return SLIME_TARGET_HEIGHT
+	return ENEMY_TARGET_HEIGHT
 
 
 static func _load_texture(path: String) -> Texture2D:
