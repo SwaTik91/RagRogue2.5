@@ -14,7 +14,7 @@ Open `project.godot` in the Godot 4.3 editor, or from the project root:
 godot --path .
 ```
 
-The current main scene is `scenes/boot.tscn` (a placeholder until the hub lands).
+The current main scene is `scenes/main_menu/main_menu.tscn` (Играть / Герои / Настройки).
 
 ## Run tests
 
@@ -42,7 +42,7 @@ Landscape APK for Huawei AppGallery (RU/CIS). Preset `Android` in `export_preset
 | Package / unique name | `com.swatik.ragrogue` (change if the AGC publisher ID differs) |
 | Orientation | Landscape — `project.godot` `[display] window/handheld/orientation=4` (`SCREEN_SENSOR_LANDSCAPE`) |
 | Min SDK | Godot 4.3 default (`gradle_build/min_sdk` left empty) |
-| Store drafts | `docs/store/listing-ru.md`, `docs/store/privacy-mvp.md` |
+| Store drafts | `docs/store/listing-ru.md`, `docs/store/privacy-mvp.md`, `docs/store/appgallery-checklist.md` |
 
 ### Prerequisites
 
@@ -61,35 +61,17 @@ godot --headless --path . --export-debug Android build/ragrogue-debug.apk
 
 `*.apk` / `*.aab` are gitignored.
 
-### Blocker in this environment (2026-08-21)
+### Blocker in this environment (historical, 2026-08-21)
 
-A debug APK **cannot** be produced on this Cloud Agent VM. Headless export was attempted and failed (`EXIT:1`) with Godot’s own checklist:
-
-```text
-godot --headless --path . --export-debug Android /tmp/ragrogue-export/ragrogue-debug.apk
-
-ERROR: Cannot export project with preset "Android" due to configuration errors:
-No export template found at the expected path:
-/home/ubuntu/.local/share/godot/export_templates/4.3.stable/android_debug.apk
-No export template found at the expected path:
-/home/ubuntu/.local/share/godot/export_templates/4.3.stable/android_release.apk
-Debug keystore not configured in the Editor Settings nor in the preset.
-A valid Java SDK path is required in Editor Settings.
-A valid Android SDK path is required in Editor Settings.
-ERROR: Project export for preset "Android" failed.
-```
-
-`ANDROID_HOME` / `ANDROID_SDK_ROOT` are unset; Editor Settings `export/android/android_sdk_path` and `export/android/java_sdk_path` are empty. `~/.local/share/godot/export_templates/` has no `4.3.stable` pack.
-
-Install the 4.3.stable Android export templates, a JDK, and an Android SDK on a machine that has them; set the editor SDK paths and a debug keystore; then rerun the export command. This gap does not block the listing drafts or the preset file.
+Early Cloud Agent VMs lacked export templates / Android SDK / JDK paths. Current setup uses Godot 4.3 templates under `~/.local/share/godot/export_templates/4.3.stable/`, JDK 17, and `$HOME/android-sdk`. See **Debug APK (cloud / CI)** below.
 
 ## Layout
 
 - `scripts/domain/` — headless-testable game logic
-- `scripts/app/` — autoloads (`GameSession`)
+- `scripts/app/` — autoloads (`GameSession`, `AppSettings`)
 - `scripts/tests/` — headless runner and cases
-- `scenes/` — Godot scenes
-- `docs/store/` — AppGallery listing, privacy, and Ludo AI media briefs
+- `scenes/` — Godot scenes (`main_menu`, `hub`, `settings`, `dungeon`)
+- `docs/store/` — AppGallery listing, privacy, checklist, Ludo AI media briefs
 - `assets/` — branding + screenshot drop points (`assets/placeholders/README.md`)
 - `export_presets.cfg` — Android landscape export preset
 
@@ -101,6 +83,7 @@ Prerequisites: Godot 4.3, export templates, Android SDK, **JDK 17** (not 21), ET
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export ANDROID_HOME=$HOME/android-sdk
 godot --headless --path . --install-android-build-template
+mkdir -p build
 godot --headless --path . --export-debug "Android" build/RagRogue-debug.apk
 ```
 

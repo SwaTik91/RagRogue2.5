@@ -66,4 +66,6 @@
 - Пакет: `com.swatik.ragrogue` (если publisher ID в AGC другой — поменять unique name в `export_presets.cfg`).
 - Бинарь: Android APK/AAB для Huawei; HarmonyOS позже при необходимости.
 - Не закладываться на GMS-only рекламу/биллинг, пока нет модели монетизации.
-- Иконка и 3 скриншота — отдельный пакет Ludo AI (`docs/store/ludo-ai-briefs.md`, дроп: `assets/placeholders/README.md`).
+- Иконка и 3 скриншота — `assets/branding/`, `assets/screenshots/shot-1.png` … `shot-3.png`.
+- Чеклист сабмита: `docs/store/appgallery-checklist.md`.
+- Видео: `assets/screenshots/combat-loop.mp4`.

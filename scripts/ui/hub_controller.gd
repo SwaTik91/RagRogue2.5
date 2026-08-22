@@ -28,8 +28,19 @@ func _ready() -> void:
 		enter_button.pressed.connect(enter_dungeon)
 	if back_button != null:
 		back_button.pressed.connect(_on_back)
+	_apply_locale()
 	_refresh_hero_panel()
 	_show_toast(consume_pending_toast())
+
+
+func _apply_locale() -> void:
+	var subtitle := get_node_or_null("VBox/SubtitleLabel") as Label
+	if subtitle != null:
+		subtitle.text = Loc.t("pick_hero")
+	if enter_button != null:
+		enter_button.text = Loc.t("enter_dungeon")
+	if back_button != null:
+		back_button.text = Loc.t("back_menu")
 
 
 func _on_back() -> void:
@@ -119,7 +130,7 @@ func _refresh_hero_panel() -> void:
 		return
 	var hero: Hero = session.active_hero()
 	if level_label != null:
-		level_label.text = "Уровень %d" % hero.level
+		level_label.text = Loc.t("level") % hero.level
 	if gear_label != null:
 		gear_label.text = equipped_summary(hero)
 	if skills_label != null:

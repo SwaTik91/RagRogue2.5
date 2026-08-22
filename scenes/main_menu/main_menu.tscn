@@ -28,60 +28,62 @@ stretch_mode = 6
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_right = 460.0
+offset_right = 520.0
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.05, 0.07, 0.1, 0.55)
+color = Color(0.04, 0.05, 0.07, 0.42)
 
 [node name="MenuColumn" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 64.0
-offset_top = -180.0
-offset_right = 420.0
-offset_bottom = 200.0
+offset_left = 72.0
+offset_top = -200.0
+offset_right = 400.0
+offset_bottom = 220.0
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="MenuColumn"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
-theme_override_colors/font_outline_color = Color(0.05, 0.08, 0.12, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(0.92, 0.9, 0.84, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.1, 0.08, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 72
 text = "RagRogue"
 
 [node name="Tagline" type="Label" parent="MenuColumn"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.82, 0.9, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 0.85)
+theme_override_font_sizes/font_size = 15
 text = "Roguelike · автобой · ручной ход"
 
 [node name="Spacer" type="Control" parent="MenuColumn"]
-custom_minimum_size = Vector2(0, 12)
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 
 [node name="PlayButton" type="Button" parent="MenuColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
 text = "Играть"
 
 [node name="HeroesButton" type="Button" parent="MenuColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 text = "Герои"
 
 [node name="SettingsButton" type="Button" parent="MenuColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 text = "Настройки"
 
 [node name="ToastLabel" type="Label" parent="."]
@@ -101,5 +103,5 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.95, 0.9, 0.55, 1)
 theme_override_font_sizes/font_size = 20
-text = "Настройки — скоро"
+text = ""
 horizontal_alignment = 1

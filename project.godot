@@ -19,6 +19,11 @@ window/handheld/orientation=4
 [autoload]
 
 GameSession="*res://scripts/app/game_session.gd"
+AppSettings="*res://scripts/app/app_settings.gd"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [rendering]
 textures/vram_compression/import_etc2_astc=true
