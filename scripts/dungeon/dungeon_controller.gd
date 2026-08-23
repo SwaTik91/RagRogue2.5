@@ -1,8 +1,8 @@
-extends Node2D
+extends Node3D
 
 var _director: Node = null
 var _player: Node = null
-var _enemies_root: Node2D = null
+var _enemies_root: Node3D = null
 var _monster_table: Dictionary = {}
 var _hp_label: Label = null
 var _banner: Label = null
@@ -10,13 +10,13 @@ var _upgrade_modal: Node = null
 
 
 func _ready() -> void:
-	RoMapBuilder.build(self)
+	DungeonMapBuilder3D.build(get_node_or_null("World") as Node3D)
 	_monster_table = _load_monster_table()
 	_player = get_node_or_null("Player")
 	_director = get_node_or_null("CombatDirector")
-	_enemies_root = get_node_or_null("Enemies") as Node2D
+	_enemies_root = get_node_or_null("Enemies") as Node3D
 	if _enemies_root == null:
-		_enemies_root = Node2D.new()
+		_enemies_root = Node3D.new()
 		_enemies_root.name = "Enemies"
 		add_child(_enemies_root)
 	_hp_label = get_node_or_null("HUD/HpLabel") as Label
@@ -219,15 +219,15 @@ func spawn_plan_positions(count: int) -> Array:
 
 
 func _make_enemy(def: Dictionary, index: int, count: int) -> Node:
-	var packed: PackedScene = load("res://scenes/dungeon/enemy.tscn")
+	var packed: PackedScene = load("res://scenes/dungeon/enemy_3d.tscn")
 	var enemy: Node
 	if packed != null:
 		enemy = packed.instantiate()
 	else:
-		enemy = load("res://scripts/dungeon/enemy_actor.gd").new()
+		enemy = load("res://scripts/dungeon/enemy_actor_3d.gd").new()
 	if enemy.has_method("bind_monster"):
 		enemy.bind_monster(def)
-	enemy.position = _pack_position(index, count)
+	PlaneCoords.set_node_plane(enemy, _pack_position(index, count))
 	return enemy
 
 

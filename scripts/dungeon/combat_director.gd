@@ -168,7 +168,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _read_player() -> Dictionary:
-	var pos: Vector2 = player.global_position if player.is_inside_tree() else player.position
+	var pos := PlaneCoords.from_node(player)
 	var state := {
 		"pos": pos,
 		"hp": float(player.hp),
@@ -200,7 +200,7 @@ func _read_enemies() -> Array:
 	for node in enemies:
 		if node == null or not is_instance_valid(node):
 			continue
-		var pos: Vector2 = node.global_position if node.is_inside_tree() else node.position
+		var pos := PlaneCoords.from_node(node)
 		out.append({
 			"pos": pos,
 			"hp": float(node.hp),
@@ -225,7 +225,7 @@ func _write_player(player_state: Dictionary) -> void:
 	var before := float(player.hp)
 	player.hp = float(player_state.hp)
 	if player.hp < before:
-		_spawn_float(player.position, "-%d" % int(before - player.hp), Color(1, 0.45, 0.4))
+		_spawn_float(PlaneCoords.from_node(player), "-%d" % int(before - player.hp), Color(1, 0.45, 0.4))
 		if player.has_method("play_hit_anim"):
 			player.play_hit_anim()
 
@@ -238,7 +238,7 @@ func _write_enemies(foes: Array) -> void:
 		var before := float(node.hp)
 		node.hp = float(foe.hp)
 		if node.hp < before:
-			_spawn_float(node.position, "-%d" % int(before - node.hp), Color(1, 0.86, 0.35))
+			_spawn_float(PlaneCoords.from_node(node), "-%d" % int(before - node.hp), Color(1, 0.86, 0.35))
 			if node.has_method("play_hit_anim"):
 				node.play_hit_anim()
 		if node.has_method("refresh_alive"):
@@ -273,37 +273,49 @@ func _write_enemy_cds(enemy_cds: Array) -> void:
 func _chase_aggro_enemies() -> void:
 	if player == null or not is_instance_valid(player):
 		return
-	var player_pos: Vector2 = player.global_position if player.is_inside_tree() else player.position
+	var player_pos := PlaneCoords.from_node(player)
 	for node in enemies:
 		if node == null or not is_instance_valid(node):
 			continue
 		if float(node.hp) <= 0.0:
-			if node is CharacterBody2D:
-				node.velocity = Vector2.ZERO
+			PlaneCoords.set_body_velocity(node, Vector2.ZERO)
 			continue
-		var pos: Vector2 = node.global_position if node.is_inside_tree() else node.position
+		var pos := PlaneCoords.from_node(node)
 		var dist := pos.distance_to(player_pos)
-		if node is CharacterBody2D and dist <= AGGRO_RADIUS and dist > ENEMY_ATTACK_RANGE:
+		if dist <= AGGRO_RADIUS and dist > ENEMY_ATTACK_RANGE:
 			var dir := (player_pos - pos).normalized()
-			node.velocity = dir * float(node.move_speed)
-			node.move_and_slide()
-		elif node is CharacterBody2D:
-			node.velocity = Vector2.ZERO
+			PlaneCoords.set_body_velocity(node, dir * float(node.move_speed))
+			if node is CharacterBody3D:
+				(node as CharacterBody3D).move_and_slide()
+			elif node is CharacterBody2D:
+				(node as CharacterBody2D).move_and_slide()
+		else:
+			PlaneCoords.set_body_velocity(node, Vector2.ZERO)
 
 
-func _spawn_float(world_pos: Vector2, text: String, color: Color) -> void:
-	var parent := get_parent()
-	if parent == null:
+func _spawn_float(plane_pos: Vector2, text: String, color: Color) -> void:
+	var hud := get_parent().get_node_or_null("HUD") if get_parent() != null else null
+	if hud == null:
 		return
 	var label := Label.new()
 	label.text = text
 	label.modulate = color
-	label.position = world_pos + Vector2(-12, -28)
-	parent.add_child(label)
-	var tween := parent.create_tween()
+	label.position = _plane_to_screen(plane_pos) + Vector2(-12, -28)
+	hud.add_child(label)
+	var tween := hud.create_tween()
 	tween.tween_property(label, "position", label.position + Vector2(0, -36), 0.55)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.55)
 	tween.tween_callback(label.queue_free)
+
+
+func _plane_to_screen(plane: Vector2) -> Vector2:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return plane
+	var world := PlaneCoords.to_vector3(plane, 48.0)
+	if not cam.is_position_in_frustum(world):
+		return plane
+	return cam.unproject_position(world)
 
 
 func _handle_defeat() -> void:
