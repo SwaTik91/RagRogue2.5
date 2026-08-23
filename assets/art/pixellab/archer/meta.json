@@ -1,9 +1,7 @@
 {
-  "source": "mannequin_state_zip + api_anims + rotate",
-  "character_id": "059aaa76-7fb1-4113-8df3-4367c9a4bbce",
+  "source": "full-pixflux (idle pixflux + create-character rest)",
+  "character_id": "8c3a8142-467d-4729-b1bd-6f71ae598bb8",
   "actor": "archer",
-  "state_folder": "Idle",
-  "imported_frames": 0,
   "pixellab_tag": "Sniper1",
   "animations": [
     "idle",

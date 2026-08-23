@@ -360,7 +360,38 @@ def fetch_character_zip(character_id: str) -> bytes:
 		return resp.read()
 
 
-def export_frames_from_zip(actor: str, character_id: str, zdata: bytes) -> int:
+def _latest_animation_group_ids(detail: dict) -> dict[str, str]:
+	"""Map game anim name → latest PixelLab animation_group_id (south-only jobs)."""
+	out: dict[str, str] = {}
+	for group in detail.get("animations", []):
+		anim_type = str(group.get("animation_type", "")).lower()
+		display = str(group.get("display_name", "")).lower()
+		game_anim = _map_anim_name(display) or _map_anim_name(anim_type)
+		if not game_anim or game_anim == "idle":
+			continue
+		gid = str(group.get("animation_group_id", "")).strip()
+		if gid:
+			out[game_anim] = gid
+	return out
+
+
+def _zip_folder_group_id(pl_folder: str) -> str:
+	"""walking-ee2323f6 → ee2323f6; walking → empty."""
+	if "-" in pl_folder:
+		return pl_folder.rsplit("-", 1)[-1]
+	return ""
+
+
+def _zip_folder_base(pl_folder: str) -> str:
+	return pl_folder.split("-")[0].lower().replace("_", "-")
+
+
+def export_frames_from_zip(
+	actor: str,
+	character_id: str,
+	zdata: bytes,
+	group_ids: dict[str, str] | None = None,
+) -> int:
 	zf = zipfile.ZipFile(BytesIO(zdata))
 	imported = 0
 	for inner in zf.namelist():
@@ -369,17 +400,25 @@ def export_frames_from_zip(actor: str, character_id: str, zdata: bytes) -> int:
 		parts = inner.split("/")
 		try:
 			anim_idx = parts.index("animations")
-			pl_anim = parts[anim_idx + 1]
+			pl_folder = parts[anim_idx + 1]
 			pl_dir_raw = parts[anim_idx + 2]
 			pl_dir = pl_dir_raw.split("-")[0]
 			fname = parts[anim_idx + 3]
 		except (ValueError, IndexError):
 			continue
-		game_anim = ZIP_ANIM_MAP.get(pl_anim.lower())
-		if not game_anim:
-			game_anim = _map_anim_name(pl_anim)
+		base = _zip_folder_base(pl_folder)
+		game_anim = ZIP_ANIM_MAP.get(base) or _map_anim_name(base) or _map_anim_name(pl_folder)
 		if not game_anim or game_anim == "idle":
 			continue
+		if group_ids and game_anim in group_ids:
+			want = group_ids[game_anim]
+			folder_gid = _zip_folder_group_id(pl_folder)
+			if folder_gid:
+				if not want.startswith(folder_gid):
+					continue
+			else:
+				# Skip generic folders (walking/) when API expects a specific job group.
+				continue
 		if pl_dir not in ANIM_DIRECTIONS:
 			continue
 		game_dir = DIR_MAP.get(pl_dir, pl_dir)
@@ -393,27 +432,45 @@ def export_frames_from_zip(actor: str, character_id: str, zdata: bytes) -> int:
 			out.write(zf.read(inner))
 		imported += 1
 	print(f"  zip export: {imported} frames", flush=True)
+	if imported == 0 and group_ids:
+		print("  zip export: group filter matched 0 — retry without filter", flush=True)
+		return export_frames_from_zip(actor, character_id, zdata, group_ids=None)
 	return imported
 
 
 def export_frames(actor: str, character_id: str) -> None:
 	detail = wait_character_ready(character_id)
+	group_ids = _latest_animation_group_ids(detail)
 	animations = detail.get("animations", [])
 	if animations:
 		try:
 			exported = 0
-			for group in animations:
+			seen: set[str] = set()
+			for group in reversed(animations):
 				anim_type = str(group.get("animation_type", "")).lower()
 				display = str(group.get("display_name", "")).lower()
 				game_anim = _map_anim_name(display) or _map_anim_name(anim_type)
 				if not game_anim or game_anim == "idle":
 					continue
+				if game_anim in seen:
+					continue
+				seen.add(game_anim)
 				for dir_entry in group.get("directions", []):
 					pl_dir = str(dir_entry.get("direction", ""))
 					if pl_dir not in ANIM_DIRECTIONS:
 						continue
 					game_dir = DIR_MAP.get(pl_dir, pl_dir)
 					frames = dir_entry.get("frames", [])
+					# South-only export: wipe stale up/left/right before rotate repopulates them.
+					if pl_dir == "south":
+						for stale_dir in ("up", "left", "right"):
+							stale_folder = f"{ANIM_ROOT}/{actor}/{stale_dir}/{game_anim}"
+							if os.path.isdir(stale_folder):
+								for old in os.listdir(stale_folder):
+									if old.startswith("frame_") and (
+										old.endswith(".png") or old.endswith(".webp")
+									):
+										os.remove(os.path.join(stale_folder, old))
 					folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
 					os.makedirs(folder, exist_ok=True)
 					for old in os.listdir(folder):
@@ -445,7 +502,7 @@ def export_frames(actor: str, character_id: str) -> None:
 						old.endswith(".png") or old.endswith(".webp")
 					):
 						os.remove(os.path.join(folder, old))
-	export_frames_from_zip(actor, character_id, zdata)
+	export_frames_from_zip(actor, character_id, zdata, group_ids=group_ids)
 
 
 def _map_anim_name(pl_type: str) -> str | None:
@@ -994,6 +1051,8 @@ def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	for job in jobs:
 		request_animation(cid, job)
 	export_frames(actor, cid)
+	if phase in ("all", "rest") and actor in ("archer", "swordman", "mage"):
+		rotate_south_anims(actor, force=True)
 	if phase in ("all", "rest"):
 		_copy_idle_portrait(actor)
 	print(f"done {actor} phase={phase}", flush=True)

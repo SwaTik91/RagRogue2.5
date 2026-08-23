@@ -19,10 +19,14 @@ func _ready() -> void:
 		_enemies_root = Node2D.new()
 		_enemies_root.name = "Enemies"
 		add_child(_enemies_root)
-	_hp_label = get_node_or_null("HUD/SafeArea/HpLabel") as Label
+	_hp_label = get_node_or_null("HUD/SafeArea/HudRoot/HpLabel") as Label
+	if _hp_label == null:
+		_hp_label = get_node_or_null("HUD/SafeArea/HpLabel") as Label
 	if _hp_label == null:
 		_hp_label = get_node_or_null("HUD/HpLabel") as Label
-	_banner = get_node_or_null("HUD/SafeArea/BannerLabel") as Label
+	_banner = get_node_or_null("HUD/SafeArea/HudRoot/BannerLabel") as Label
+	if _banner == null:
+		_banner = get_node_or_null("HUD/SafeArea/BannerLabel") as Label
 	if _banner == null:
 		_banner = get_node_or_null("HUD/BannerLabel") as Label
 	spawn_current_room()
@@ -275,7 +279,7 @@ func _refresh_hp_label() -> void:
 	var suffix := ""
 	if _director != null and "god_mode" in _director and bool(_director.god_mode):
 		suffix = "  [GOD]"
-	_hp_label.text = "HP %d/%d  v0.1.32%s" % [maxi(0, int(_player.hp)), int(_player.hp_max), suffix]
+	_hp_label.text = "HP %d/%d  v0.1.33%s" % [maxi(0, int(_player.hp)), int(_player.hp_max), suffix]
 
 
 func _load_monster_table() -> Dictionary:

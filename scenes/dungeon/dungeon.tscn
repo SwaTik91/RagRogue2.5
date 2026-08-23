@@ -52,17 +52,26 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("4_safe")
 
-[node name="HpLabel" type="Label" parent="HUD/SafeArea"]
+[node name="HudRoot" type="Control" parent="HUD/SafeArea"]
 layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HpLabel" type="Label" parent="HUD/SafeArea/HudRoot"]
+layout_mode = 0
 offset_left = 24.0
 offset_top = 16.0
 offset_right = 320.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 22
-text = "HP --/--  v0.1.32"
+text = "HP --/--  v0.1.33"
 
-[node name="GodModeButton" type="Button" parent="HUD/SafeArea"]
-layout_mode = 2
+[node name="GodModeButton" type="Button" parent="HUD/SafeArea/HudRoot"]
+layout_mode = 0
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -70,13 +79,15 @@ offset_left = -120.0
 offset_top = 12.0
 offset_right = -16.0
 offset_bottom = 52.0
+grow_horizontal = 0
+grow_vertical = 0
 theme_override_font_sizes/font_size = 18
 toggle_mode = true
 text = "GOD"
 script = ExtResource("5_god")
 
-[node name="BannerLabel" type="Label" parent="HUD/SafeArea"]
-layout_mode = 2
+[node name="BannerLabel" type="Label" parent="HUD/SafeArea/HudRoot"]
+layout_mode = 0
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
