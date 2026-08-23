@@ -4,8 +4,8 @@ extends Node3D
 
 @export var target_path: NodePath
 @export var orbit_distance := 380.0
-@export var tilt_degrees := 48.0
-@export var ortho_size := 320.0
+@export var tilt_degrees := 50.0
+@export var ortho_size := 310.0
 @export var look_at_height := 42.0
 @export var smoothing := 8.0
 
