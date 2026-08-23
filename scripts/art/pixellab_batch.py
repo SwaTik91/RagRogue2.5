@@ -731,30 +731,40 @@ def rotate_from_south(
 	to_direction: str,
 	width: int,
 	height: int,
+	max_attempts: int = 4,
 ) -> bytes:
-	print(f"rotate south→{to_direction}...", flush=True)
-	resp = api(
-		"POST",
-		"/rotate",
-		{
-			"from_image": {
-				"type": "base64",
-				"base64": base64.b64encode(from_png).decode(),
-				"format": "png",
-			},
-			"image_size": {"width": width, "height": height},
-			"from_view": "low top-down",
-			"to_view": "low top-down",
-			"from_direction": "south",
-			"to_direction": to_direction,
-			"image_guidance_scale": 8.0,
-		},
-		timeout=180,
-	)
-	b64 = resp.get("image", {}).get("base64")
-	if not b64:
-		raise RuntimeError(f"rotate to {to_direction} returned no image")
-	return _decode_b64(b64)
+	for attempt in range(max_attempts):
+		try:
+			print(f"rotate south→{to_direction}...", flush=True)
+			resp = api(
+				"POST",
+				"/rotate",
+				{
+					"from_image": {
+						"type": "base64",
+						"base64": base64.b64encode(from_png).decode(),
+						"format": "png",
+					},
+					"image_size": {"width": width, "height": height},
+					"from_view": "low top-down",
+					"to_view": "low top-down",
+					"from_direction": "south",
+					"to_direction": to_direction,
+					"image_guidance_scale": 8.0,
+				},
+				timeout=180,
+			)
+			b64 = resp.get("image", {}).get("base64")
+			if not b64:
+				raise RuntimeError(f"rotate to {to_direction} returned no image")
+			return _decode_b64(b64)
+		except RuntimeError as exc:
+			if attempt + 1 >= max_attempts or "HTTP 5" not in str(exc):
+				raise
+			wait = 2.0 * (attempt + 1)
+			print(f"  rotate retry {attempt + 2}/{max_attempts} in {wait:.0f}s...", flush=True)
+			time.sleep(wait)
+	raise RuntimeError(f"rotate to {to_direction} failed after {max_attempts} attempts")
 
 
 IDLE_ROTATE_DIRS = {
@@ -763,6 +773,81 @@ IDLE_ROTATE_DIRS = {
 	"right": "east",
 	"left": "west",
 }
+
+ROTATE_ANIM_NAMES = ("walk", "attack", "skill")
+
+
+def rotate_south_anims(actor: str, anims: tuple[str, ...] = ROTATE_ANIM_NAMES, force: bool = False) -> int:
+	"""Rotate south (down) animation frames to up/left/right via PixelLab /rotate."""
+	try:
+		from PIL import Image
+	except ImportError:
+		raise RuntimeError("rotate-anims requires Pillow (pip install Pillow)")
+	w, h = MOB_IMAGE_SIZE.get(actor, (96, 96))
+	target = (w, h)
+
+	def _normalize_png(png_bytes: bytes) -> bytes:
+		img = Image.open(BytesIO(png_bytes)).convert("RGBA")
+		canvas = Image.new("RGBA", target, (0, 0, 0, 0))
+		if img.size != target:
+			img = img.resize(target, Image.Resampling.LANCZOS)
+		ox = (target[0] - img.width) // 2
+		oy = (target[1] - img.height) // 2
+		canvas.paste(img, (ox, oy), img)
+		buf = BytesIO()
+		canvas.save(buf, format="PNG")
+		return buf.getvalue()
+
+	def _normalize_south_folder(anim_name: str) -> None:
+		south_dir = f"{ANIM_ROOT}/{actor}/down/{anim_name}"
+		if not os.path.isdir(south_dir):
+			return
+		for fname in os.listdir(south_dir):
+			if not fname.startswith("frame_") or not fname.endswith(".png"):
+				continue
+			path = os.path.join(south_dir, fname)
+			with open(path, "rb") as f:
+				norm = _normalize_png(f.read())
+			with open(path, "wb") as out:
+				out.write(norm)
+
+	for anim_name in anims:
+		_normalize_south_folder(anim_name)
+
+	rotated = 0
+	for anim_name in anims:
+		south_dir = f"{ANIM_ROOT}/{actor}/down/{anim_name}"
+		if not os.path.isdir(south_dir):
+			print(f"skip {anim_name}: no down folder", flush=True)
+			continue
+		frame_files = sorted(
+			f for f in os.listdir(south_dir)
+			if f.startswith("frame_") and f.endswith(".png")
+		)
+		if not frame_files:
+			print(f"skip {anim_name}: no south frames", flush=True)
+			continue
+		print(f"rotate {anim_name}: {len(frame_files)} frames × 3 dirs", flush=True)
+		for game_dir, pl_dir in IDLE_ROTATE_DIRS.items():
+			if pl_dir is None:
+				continue
+			out_dir = f"{ANIM_ROOT}/{actor}/{game_dir}/{anim_name}"
+			os.makedirs(out_dir, exist_ok=True)
+			for fname in frame_files:
+				src = os.path.join(south_dir, fname)
+				dest = os.path.join(out_dir, fname)
+				if not force and os.path.isfile(dest):
+					print(f"  skip existing {game_dir}/{anim_name}/{fname}", flush=True)
+					continue
+				with open(src, "rb") as f:
+					raw = rotate_from_south(_normalize_png(f.read()), pl_dir, w, h)
+				with open(dest, "wb") as out:
+					out.write(raw)
+				rotated += 1
+				time.sleep(0.35)
+	write_preview_sheet(actor)
+	print(f"rotated {rotated} frames for {actor}", flush=True)
+	return rotated
 
 
 def run_idle_pixflux(actor: str) -> None:
@@ -944,6 +1029,11 @@ def main() -> None:
 		help="PixelLab character id for --import-existing ZIP download",
 	)
 	parser.add_argument(
+		"--rotate-anims",
+		action="store_true",
+		help="rotate south walk/attack/skill frames to up/left/right via PixelLab /rotate",
+	)
+	parser.add_argument(
 		"--phase",
 		default="all",
 		choices=["idle", "idle-pixflux", "full-pixflux", "walk", "attack", "skill", "rest", "all"],
@@ -966,6 +1056,9 @@ def main() -> None:
 		return
 	if args.import_tag.strip():
 		import_by_tag(args.import_tag.strip(), args.actor, generate_anims=args.generate_anims)
+		return
+	if args.rotate_anims:
+		rotate_south_anims(args.actor, force=args.force)
 		return
 	_dispatch(args.actor, force=args.force, phase=args.phase)
 

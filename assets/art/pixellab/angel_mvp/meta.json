@@ -7,5 +7,5 @@
   "export_zip": "assets/art/pixellab/angel_mvp/export.zip",
   "pixellab_status": "completed",
   "pixellab_anims": ["walk", "attack", "skill"],
-  "note": "south-only PixelLab anims; up/left/right derived via procedural_mob_anims.py"
+  "note": "south PixelLab anims + up/left/right via --rotate-anims (78 frames)"
 }
