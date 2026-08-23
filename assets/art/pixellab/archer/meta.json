@@ -1,0 +1,9 @@
+{
+  "character_id": "c48072d0-da91-4149-ab16-276fb82e76ad",
+  "background_job_id": "54295986-3f79-4996-a628-df95a7f44466",
+  "actor": "archer",
+  "source": "create-character-with-4-directions",
+  "exported_frames": 118,
+  "animations": ["idle", "walk", "attack", "skill"],
+  "directions": ["down", "up", "left", "right"]
+}
