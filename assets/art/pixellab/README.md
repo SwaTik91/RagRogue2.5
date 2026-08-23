@@ -12,15 +12,23 @@ Generate 4-direction pixel characters + animations via [PixelLab API](https://ap
 Do **not** run the full animation batch until the base sprite looks correct.
 A bad `create-character` poisons every follow-up animation.
 
-1. **Idle only** (4 directions) — review in Godot or image viewer:
+1. **Idle only** (4 directions) — auto preview sheet:
 
 ```bash
-python3 scripts/art/pixellab_batch.py lunatic --phase idle-pixflux
-# south pixflux + rotate for up/left/right (avoids breathing-idle twins)
-# check assets/art/anim/lunatic/{down,up,left,right}/idle/
+python3 scripts/art/pixellab_batch.py drops --phase idle-pixflux
+# preview: assets/art/pixellab/drops/preview_sheet.png
 ```
 
-2. After manual approval, continue walk + attack + skill:
+2. **Full mob** (idle + walk + attack + skill, south anims + 4-dir idle):
+
+```bash
+python3 scripts/art/pixellab_batch.py drops --phase full-pixflux
+```
+
+Idle uses pixflux south + `/rotate` for other dirs (no breathing-idle twins).
+Walk/attack/skill export south only; other facings use idle + mirror fallback in game.
+
+3. After manual approval of idle only, continue anims:
 
 ```bash
 python3 scripts/art/pixellab_batch.py lunatic --phase rest

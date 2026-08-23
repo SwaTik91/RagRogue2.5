@@ -254,6 +254,19 @@ def _decode_b64(b64: str) -> bytes:
 	return base64.b64decode(b64)
 
 
+def preferred_ref_image(actor: str) -> str | None:
+	anim_ref = f"{ANIM_ROOT}/{actor}/down/idle/frame_00.png"
+	if os.path.isfile(anim_ref):
+		return anim_ref
+	ref = f"{GAME_ART}/{actor}-idle.png"
+	if os.path.isfile(ref):
+		return ref
+	portrait = f"{GAME_ART}/{actor}.png"
+	if os.path.isfile(portrait):
+		return portrait
+	return None
+
+
 def create_character(actor: str, ref_image: str | None, force: bool = False) -> str:
 	meta_path = f"{META_ROOT}/{actor}/meta.json"
 	if not force and os.path.isfile(meta_path):
@@ -362,7 +375,7 @@ def export_frames_from_zip(actor: str, character_id: str, zdata: bytes) -> int:
 		game_anim = ZIP_ANIM_MAP.get(pl_anim.lower())
 		if not game_anim:
 			game_anim = _map_anim_name(pl_anim)
-		if not game_anim:
+		if not game_anim or game_anim == "idle":
 			continue
 		if pl_dir not in ANIM_DIRECTIONS:
 			continue
@@ -390,7 +403,7 @@ def export_frames(actor: str, character_id: str) -> None:
 				anim_type = str(group.get("animation_type", "")).lower()
 				display = str(group.get("display_name", "")).lower()
 				game_anim = _map_anim_name(display) or _map_anim_name(anim_type)
-				if not game_anim:
+				if not game_anim or game_anim == "idle":
 					continue
 				for dir_entry in group.get("directions", []):
 					pl_dir = str(dir_entry.get("direction", ""))
@@ -629,6 +642,71 @@ def run_idle_pixflux(actor: str) -> None:
 	)
 
 
+def write_preview_sheet(actor: str) -> str:
+	"""4-dir idle + down walk/attack/skill contact sheet for quick review."""
+	try:
+		from PIL import Image, ImageDraw, ImageFont
+	except ImportError:
+		print("preview skipped (install Pillow)", flush=True)
+		return ""
+	rows: list[tuple[str, list[str]]] = []
+	for game_dir in ("down", "up", "left", "right"):
+		idle = f"{ANIM_ROOT}/{actor}/{game_dir}/idle/frame_00.png"
+		if os.path.isfile(idle):
+			rows.append((f"idle {game_dir}", [idle]))
+	for anim in ("walk", "attack", "skill"):
+		folder = f"{ANIM_ROOT}/{actor}/down/{anim}"
+		if not os.path.isdir(folder):
+			continue
+		paths = sorted(
+			[
+				os.path.join(folder, f)
+				for f in os.listdir(folder)
+				if f.startswith("frame_") and f.endswith(".png")
+			]
+		)
+		if paths:
+			rows.append((f"{anim} down", paths[:8]))
+	if not rows:
+		return ""
+	cell = 128
+	pad = 8
+	label_h = 22
+	row_h = cell + label_h + pad
+	w = max(len(p) for _, p in rows) * (cell + pad) + pad
+	h = len(rows) * row_h + pad
+	sheet = Image.new("RGBA", (w, h), (32, 32, 40, 255))
+	draw = ImageDraw.Draw(sheet)
+	y = pad
+	for label, paths in rows:
+		draw.text((pad, y), label, fill=(220, 220, 220))
+		y += label_h
+		x = pad
+		for path in paths:
+			img = Image.open(path).convert("RGBA")
+			img.thumbnail((cell, cell), Image.Resampling.NEAREST)
+			ox = x + (cell - img.width) // 2
+			oy = y + (cell - img.height) // 2
+			sheet.paste(img, (ox, oy), img)
+			x += cell + pad
+		y += cell + pad
+	out_dir = f"{META_ROOT}/{actor}"
+	os.makedirs(out_dir, exist_ok=True)
+	out = f"{out_dir}/preview_sheet.png"
+	sheet.save(out, format="PNG")
+	print(f"preview → {out}", flush=True)
+	return out
+
+
+def run_full_pixflux(actor: str) -> None:
+	"""Idle pixflux+rotate, then walk/attack/skill (south) with fresh character ref."""
+	run_idle_pixflux(actor)
+	write_preview_sheet(actor)
+	run_actor(actor, force=True, phase="rest")
+	write_preview_sheet(actor)
+	print(f"FULL PIXFLUX DONE — {META_ROOT}/{actor}/preview_sheet.png", flush=True)
+
+
 def jobs_for_phase(actor: str, phase: str) -> list:
 	jobs = anim_jobs_for(actor)
 	if phase == "all":
@@ -643,10 +721,9 @@ def jobs_for_phase(actor: str, phase: str) -> list:
 def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	if phase in ("idle", "idle-pixflux"):
 		run_idle_pixflux(actor)
+		write_preview_sheet(actor)
 		return
-	ref = f"{GAME_ART}/{actor}-idle.png"
-	if not os.path.isfile(ref):
-		ref = None
+	ref = preferred_ref_image(actor)
 	meta_path = f"{META_ROOT}/{actor}/meta.json"
 	cid = None
 	if not force and os.path.isfile(meta_path):
@@ -665,7 +742,7 @@ def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	for job in jobs:
 		request_animation(cid, job)
 	export_frames(actor, cid)
-	if phase in ("all", "idle", "rest"):
+	if phase in ("all", "rest"):
 		_copy_idle_portrait(actor)
 	print(f"done {actor} phase={phase}", flush=True)
 
@@ -705,10 +782,10 @@ def main() -> None:
 	parser.add_argument(
 		"--phase",
 		default="all",
-		choices=["idle", "idle-pixflux", "walk", "attack", "skill", "rest", "all"],
+		choices=["idle", "idle-pixflux", "full-pixflux", "walk", "attack", "skill", "rest", "all"],
 		help=(
-			"idle / idle-pixflux: 4-dir pixflux stills (avoids breathing-idle twins); "
-			"rest: walk+attack+skill; all: full character batch"
+			"idle / idle-pixflux: 4-dir pixflux+rotate idle + preview_sheet; "
+			"full-pixflux: idle + walk/attack/skill; rest: anims only (needs idle)"
 		),
 	)
 	args = parser.parse_args()
@@ -723,7 +800,14 @@ def main() -> None:
 			raise RuntimeError("no completed mannequin character found on account")
 		import_mannequin_zip(cid, args.actor)
 		return
-	run_actor(args.actor, force=args.force, phase=args.phase)
+	_dispatch(args.actor, force=args.force, phase=args.phase)
+
+
+def _dispatch(actor: str, force: bool, phase: str) -> None:
+	if phase == "full-pixflux":
+		run_full_pixflux(actor)
+		return
+	run_actor(actor, force=force, phase=phase)
 
 
 if __name__ == "__main__":
