@@ -35,6 +35,7 @@ static var atlas_barrel := ATLAS_BARREL
 static var atlas_wall := ATLAS_WALL
 static var grass_variants_runtime: Array[Vector2i] = GRASS_VARIANTS.duplicate()
 static var using_pixellab := false
+static var atlas_grass_fill := ATLAS_GRASS_A
 
 
 static func grass_variants() -> Array[Vector2i]:
@@ -79,11 +80,19 @@ static func _make_pixellab_tileset() -> TileSet:
 			continue
 		var coord := Vector2i(int(at[0]), int(at[1]))
 		atlas.create_tile(coord)
+	var grass_fill: Variant = meta.get("grass_fill_atlas", [0, 5])
+	if grass_fill is Array and grass_fill.size() >= 2:
+		atlas_grass_fill = Vector2i(int(grass_fill[0]), int(grass_fill[1]))
+		if not atlas.has_tile(atlas_grass_fill):
+			atlas.create_tile(atlas_grass_fill)
 	_register_decor_tiles(atlas, meta.get("decor_atlas", {}))
-	_configure_pixellab_terrains(tile_set, atlas, tiles)
 	_apply_pixellab_decor(meta.get("decor_atlas", {}))
 	_cache_grass_variants(tiles)
 	return tile_set
+
+
+static func wang_atlas_for_id(wang_id: int) -> Vector2i:
+	return Vector2i(wang_id % 4, wang_id / 4)
 
 
 static func _register_decor_tiles(atlas: TileSetAtlasSource, decor: Variant) -> void:

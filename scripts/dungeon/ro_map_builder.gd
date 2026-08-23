@@ -25,9 +25,14 @@ static func build(parent: Node2D) -> void:
 	parent.add_child(root)
 	parent.move_child(root, 0)
 	var tile_set := DungeonTilesetFactory.make_tileset()
-	var ground_layer := _make_layer(root, "Ground", -20, tile_set)
+	if DungeonTilesetFactory.using_pixellab:
+		var grass_layer := _make_layer(root, "Grass", -20, tile_set)
+		var path_layer := _make_layer(root, "PathOverlay", -18, tile_set)
+		_paint_pixellab_ground(grass_layer, path_layer)
+	else:
+		var ground_layer := _make_layer(root, "Ground", -20, tile_set)
+		_paint_procedural_ground(ground_layer)
 	var decor_layer := _make_layer(root, "Decor", -8, tile_set)
-	_paint_ground(ground_layer)
 	_paint_decor(decor_layer)
 	_paint_wall_trim(parent, tile_set)
 	_add_atmosphere(parent)
@@ -42,7 +47,30 @@ static func _make_layer(root: Node2D, layer_name: String, z: int, tile_set: Tile
 	return layer
 
 
-static func _paint_ground(layer: TileMapLayer) -> void:
+static func _paint_pixellab_ground(grass_layer: TileMapLayer, path_layer: TileMapLayer) -> void:
+	var ground_cells: Array[Vector2i] = []
+	for y in MAP_ROWS:
+		for x in MAP_COLS:
+			ground_cells.append(ORIGIN_CELL + Vector2i(x, y))
+	var grass_tile := DungeonTilesetFactory.atlas_grass_fill
+	for cell in ground_cells:
+		grass_layer.set_cell(cell, DungeonTilesetFactory.SOURCE_ID, grass_tile)
+	var path_cells := _path_cells()
+	if path_cells.is_empty():
+		return
+	var path_set: Dictionary = {}
+	for cell in path_cells:
+		path_set[cell] = true
+	for cell in path_cells:
+		var wang_id := _wang_id_for_cell(cell, path_set)
+		path_layer.set_cell(
+			cell,
+			DungeonTilesetFactory.SOURCE_ID,
+			DungeonTilesetFactory.wang_atlas_for_id(wang_id),
+		)
+
+
+static func _paint_procedural_ground(layer: TileMapLayer) -> void:
 	var ground_cells: Array[Vector2i] = []
 	for y in MAP_ROWS:
 		for x in MAP_COLS:
@@ -51,20 +79,53 @@ static func _paint_ground(layer: TileMapLayer) -> void:
 		ground_cells,
 		DungeonTilesetFactory.TERRAIN_SET,
 		DungeonTilesetFactory.TERRAIN_GRASS,
-		false
+		false,
 	)
 	var path_cells := _path_cells()
-	if path_cells.is_empty():
-		return
-	# Wang corners need grass + path on the same layer so neighbors blend correctly.
-	layer.set_cells_terrain_connect(
-		path_cells,
-		DungeonTilesetFactory.TERRAIN_SET,
-		DungeonTilesetFactory.TERRAIN_PATH,
-		false
-	)
-	if not DungeonTilesetFactory.using_pixellab:
-		_sprinkle_grass_variants(layer, ground_cells)
+	if not path_cells.is_empty():
+		layer.set_cells_terrain_connect(
+			path_cells,
+			DungeonTilesetFactory.TERRAIN_SET,
+			DungeonTilesetFactory.TERRAIN_PATH,
+			false,
+		)
+	_sprinkle_grass_variants(layer, ground_cells)
+
+
+static func _wang_id_for_cell(cell: Vector2i, path_set: Dictionary) -> int:
+	var nw := _corner_is_path(cell, path_set, &"NW")
+	var ne := _corner_is_path(cell, path_set, &"NE")
+	var sw := _corner_is_path(cell, path_set, &"SW")
+	var se := _corner_is_path(cell, path_set, &"SE")
+	var id := 0
+	if nw:
+		id |= 8
+	if ne:
+		id |= 4
+	if sw:
+		id |= 2
+	if se:
+		id |= 1
+	return id
+
+
+static func _corner_is_path(cell: Vector2i, path_set: Dictionary, corner: StringName) -> bool:
+	var offsets: Array[Vector2i] = []
+	match corner:
+		&"NW":
+			offsets = [Vector2i(0, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(-1, -1)]
+		&"NE":
+			offsets = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(1, -1)]
+		&"SW":
+			offsets = [Vector2i(0, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(-1, 1)]
+		&"SE":
+			offsets = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]
+	if offsets.is_empty():
+		return false
+	for off in offsets:
+		if path_set.has(cell + off):
+			return true
+	return false
 
 
 static func _path_cells() -> Array[Vector2i]:

@@ -250,6 +250,11 @@
       4
     ]
   },
+  "render_mode": "overlay",
+  "grass_fill_atlas": [
+    0,
+    5
+  ],
   "atlas_cols": 4,
-  "atlas_rows": 5
+  "atlas_rows": 6
 }

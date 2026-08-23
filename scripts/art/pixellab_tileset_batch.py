@@ -328,9 +328,17 @@ def export_tileset(tileset_id: str) -> dict:
 		exported.append(entry)
 
 	decor_defs = {
-		"tree": "pixel art fantasy tree, top-down roguelike decor, green canopy brown trunk",
+		"tree": (
+			"pixel art lush fantasy oak tree, top-down roguelike field decor, "
+			"round green canopy centered in frame, short brown trunk, black outline, "
+			"vibrant game sprite on transparent background"
+		),
 		"rock": "pixel art gray boulder rock, top-down field decor",
-		"barrel": "pixel art wooden barrel, top-down roguelike prop",
+		"barrel": (
+			"pixel art wooden storage barrel, top-down roguelike prop, "
+			"centered brown barrel with dark metal bands, black outline, "
+			"game icon on transparent background"
+		),
 		"wall": "pixel art stone wall trim segment, top-down dungeon border",
 	}
 	decor_atlas = {}
@@ -351,10 +359,12 @@ def export_tileset(tileset_id: str) -> dict:
 		"source_tile_size": SRC_TILE,
 		"game_tile_size": GAME_TILE,
 		"terrain": {"lower": "grass", "upper": "path"},
+		"render_mode": "overlay",
 		"tiles": exported,
 		"decor_atlas": decor_atlas,
+		"grass_fill_atlas": [0, 5],
 		"atlas_cols": 4,
-		"atlas_rows": 5,
+		"atlas_rows": 6,
 	}
 	build_atlas(meta)
 	json.dump(meta, open(f"{OUT_ROOT}/meta.json", "w"), indent=2)
@@ -362,21 +372,37 @@ def export_tileset(tileset_id: str) -> dict:
 	return meta
 
 
-def build_atlas(meta: dict) -> None:
+def build_atlas(meta: dict, solidify_decor_names: set[str] | None = None) -> None:
 	cols = meta["atlas_cols"]
 	rows = meta["atlas_rows"]
 	tile = meta["game_tile_size"]
 	w = cols * tile
 	h = rows * tile
 	canvas = [0, 0, 0, 0] * (w * h)
+	solidify_decor_names = solidify_decor_names or set()
 
+	# Wang grid: keep raw overlay tiles (transparent quadrants) for path layer.
 	for entry in meta["tiles"]:
 		col, row = entry["atlas"]
 		raw = open(f"{TILES_DIR}/{entry['id']}.png", "rb").read()
 		sw, sh, px = decode_png_rgba(raw)
 		scaled = scale_rgba(sw, sh, px, tile, tile)
-		scaled = solidify_wang_rgba(tile, tile, scaled, entry.get("corners", {}))
 		_blit(canvas, w, h, col * tile, row * tile, tile, tile, scaled)
+
+	# Solid grass fill tile for the base layer under path overlays.
+	grass_corners = {"NW": "lower", "NE": "lower", "SW": "lower", "SE": "lower"}
+	for entry in meta["tiles"]:
+		if str(entry.get("id")) == "0":
+			grass_corners = entry.get("corners", grass_corners)
+			break
+	raw0 = open(f"{TILES_DIR}/0.png", "rb").read()
+	sw, sh, px = decode_png_rgba(raw0)
+	grass_scaled = scale_rgba(sw, sh, px, tile, tile)
+	grass_scaled = solidify_wang_rgba(tile, tile, grass_scaled, grass_corners)
+	gf = meta.get("grass_fill_atlas", [0, 5])
+	gx, gy = int(gf[0]), int(gf[1])
+	write_png(f"{OUT_ROOT}/grass_fill.png", tile, tile, grass_scaled)
+	_blit(canvas, w, h, gx * tile, gy * tile, tile, tile, grass_scaled)
 
 	for name, (col, row) in meta.get("decor_atlas", {}).items():
 		path = f"{OUT_ROOT}/decor_{name}.png"
@@ -385,8 +411,9 @@ def build_atlas(meta: dict) -> None:
 		raw = open(path, "rb").read()
 		dw, dh, px = decode_png_rgba(raw)
 		scaled = scale_rgba(dw, dh, px, tile, tile)
-		scaled = solidify_decor_rgba(tile, tile, scaled)
-		write_png(path, tile, tile, scaled)
+		if name in solidify_decor_names:
+			scaled = solidify_decor_rgba(tile, tile, scaled)
+			write_png(path, tile, tile, scaled)
 		_blit(canvas, w, h, col * tile, row * tile, tile, tile, scaled)
 
 	out_path = f"{OUT_ROOT}/atlas.png"
@@ -414,6 +441,42 @@ def run_dungeon(force: bool) -> None:
 	export_tileset(tid)
 
 
+def redraw_decor(names: list[str]) -> None:
+	meta_path = f"{OUT_ROOT}/meta.json"
+	if not os.path.isfile(meta_path):
+		raise SystemExit(f"missing {meta_path}")
+	meta = json.load(open(meta_path))
+	decor_defs = {
+		"tree": (
+			"pixel art lush fantasy oak tree, top-down roguelike field decor, "
+			"round green canopy centered in frame, short brown trunk, black outline, "
+			"vibrant game sprite on transparent background"
+		),
+		"barrel": (
+			"pixel art wooden storage barrel, top-down roguelike prop, "
+			"centered brown barrel with dark metal bands, black outline, "
+			"game icon on transparent background"
+		),
+		"rock": "pixel art gray boulder rock, top-down field decor",
+		"wall": "pixel art stone wall trim segment, top-down dungeon border",
+	}
+	decor_atlas = meta.get("decor_atlas", {})
+	for name in names:
+		if name not in decor_defs:
+			raise SystemExit(f"unknown decor {name}")
+		print(f"pixflux decor {name}...", flush=True)
+		raw = create_decor_pixflux(name, decor_defs[name])
+		w, h, px = decode_png_rgba(raw)
+		scaled = scale_rgba(w, h, px, GAME_TILE, GAME_TILE)
+		write_png(f"{OUT_ROOT}/decor_{name}.png", GAME_TILE, GAME_TILE, scaled)
+		if name not in decor_atlas:
+			decor_atlas[name] = [len(decor_atlas) % 4, 4]
+	meta["decor_atlas"] = decor_atlas
+	build_atlas(meta)
+	json.dump(meta, open(meta_path, "w"), indent=2)
+	print(f"redrew decor: {', '.join(names)}", flush=True)
+
+
 def rebuild_local_atlas() -> None:
 	"""Re-solidify and rebuild atlas from existing tiles/decor without API calls."""
 	meta_path = f"{OUT_ROOT}/meta.json"
@@ -435,9 +498,18 @@ def main() -> None:
 		action="store_true",
 		help="re-solidify tiles and rebuild atlas from existing dungeon assets",
 	)
+	parser.add_argument(
+		"--redraw-decor",
+		nargs="+",
+		metavar="NAME",
+		help="regenerate decor props via PixelLab (tree, barrel, rock, wall)",
+	)
 	args = parser.parse_args()
 	if args.balance:
 		print(json.dumps(api("GET", "/balance"), indent=2))
+		return
+	if args.redraw_decor:
+		redraw_decor(args.redraw_decor)
 		return
 	if args.rebuild_local:
 		rebuild_local_atlas()
