@@ -1,6 +1,6 @@
 extends Node
 
-const AGGRO_RADIUS := 180.0
+const AGGRO_RADIUS := 360.0
 const MELEE_RANGE := 90.0
 const RANGED_RANGE := 160.0
 const ARCHER_RANGE := 320.0
@@ -16,6 +16,7 @@ var combat_paused: bool = false
 var defeated: bool = false
 var room_cleared: bool = false
 var _archer_impact_queue: Array = []
+var _mob_player_impact_queue: Array = []
 
 
 func attack_range_for_class(class_id: int) -> float:
@@ -96,7 +97,43 @@ func enemy_act(enemy: Dictionary, player_state: Dictionary, cds: Dictionary) -> 
 	if float(enemy.get("hp", 0.0)) <= 0.0:
 		return empty
 	var dist: float = enemy.pos.distance_to(player_state.pos)
-	if dist > AGGRO_RADIUS or dist > ENEMY_ATTACK_RANGE:
+	var reach := float(enemy.get("attack_range", ENEMY_ATTACK_RANGE))
+	if dist > AGGRO_RADIUS:
+		return empty
+	if dist > reach:
+		return empty
+	var skills: Array = enemy.get("skills", [])
+	if not skills.is_empty():
+		var skill: Dictionary = _pick_enemy_skill(skills, cds)
+		if not skill.is_empty():
+			var sid := str(skill.get("id", ""))
+			cds[sid] = float(skill.get("cooldown", 2.0))
+			if str(skill.get("kind", "")) == "heal_self":
+				var heal_amt := int(skill.get("heal", 10))
+				var hp_max := float(enemy.get("hp_max", enemy.get("hp", 1.0)))
+				enemy.hp = minf(hp_max, float(enemy.get("hp", 0.0)) + float(heal_amt))
+				return {
+					"applied": true,
+					"skill_id": sid,
+					"heal": heal_amt,
+					"kind": "heal_self",
+				}
+			var mult := float(skill.get("damage_mult", 1.0))
+			var raw_atk := int(round(float(enemy.get("atk", 1)) * mult))
+			var dmg := AutoCombat.basic_damage(raw_atk, int(player_state.get("def", 0)))
+			if skill.has("projectile"):
+				return {
+					"applied": true,
+					"skill_id": sid,
+					"damage": dmg,
+					"projectile": str(skill.get("projectile", "")),
+					"speed": float(skill.get("speed", 280.0)),
+					"kind": "projectile",
+					"deferred": true,
+				}
+			player_state.hp = maxf(0.0, float(player_state.hp) - float(dmg))
+			return {"applied": true, "skill_id": sid, "damage": dmg}
+	if dist > ENEMY_ATTACK_RANGE:
 		return empty
 	if float(cds.get(BASIC_CD_KEY, 0.0)) > 0.0:
 		return empty
@@ -134,6 +171,12 @@ func simulate_tick(
 				"type": "enemy_attack",
 				"enemy_index": i,
 				"damage": int(enemy_attack.get("damage", 0)),
+				"skill_id": str(enemy_attack.get("skill_id", "")),
+				"kind": str(enemy_attack.get("kind", "melee")),
+				"heal": int(enemy_attack.get("heal", 0)),
+				"projectile": str(enemy_attack.get("projectile", "")),
+				"speed": float(enemy_attack.get("speed", 280.0)),
+				"deferred": bool(enemy_attack.get("deferred", false)),
 			})
 	var any_alive := false
 	for foe in foes:
@@ -213,9 +256,13 @@ func _read_enemies() -> Array:
 		out.append({
 			"pos": pos,
 			"hp": float(node.hp),
+			"hp_max": float(node.hp_max),
 			"atk": int(node.atk),
 			"def": int(node.defense),
-			"node": node
+			"attack_range": float(node.attack_range) if "attack_range" in node else ENEMY_ATTACK_RANGE,
+			"skills": node.skills if "skills" in node else [],
+			"monster_id": str(node.monster_id) if "monster_id" in node else "",
+			"node": node,
 		})
 	return out
 
@@ -247,6 +294,8 @@ func _write_enemies(foes: Array) -> void:
 			continue
 		var before := float(node.hp)
 		node.hp = float(foe.hp)
+		if node.has_method("set_hp_value"):
+			node.set_hp_value(float(foe.hp))
 		if node.hp < before:
 			var dmg := int(before - node.hp)
 			if defer_archer_hit:
@@ -279,7 +328,14 @@ func _play_combat_events(events: Array) -> void:
 			if idx >= 0 and idx < enemies.size():
 				var node = enemies[idx]
 				if node != null and node.has_method("play_combat_anim"):
-					node.play_combat_anim("")
+					var sid := str(ev.get("skill_id", ""))
+					node.play_combat_anim(sid)
+				if str(ev.get("kind", "")) == "heal_self":
+					var heal_amt := int(ev.get("heal", 0))
+					if heal_amt > 0 and node != null and is_instance_valid(node):
+						_spawn_float(PlaneCoords.from_node(node), "+%d" % heal_amt, Color(0.45, 1.0, 0.55))
+				elif str(ev.get("kind", "")) == "projectile" and ev.get("deferred", false):
+					_queue_mob_projectile(ev, idx)
 
 
 func _write_enemy_cds(enemy_cds: Array) -> void:
@@ -302,13 +358,15 @@ func _chase_aggro_enemies() -> void:
 			continue
 		var pos := PlaneCoords.from_node(node)
 		var dist := pos.distance_to(player_pos)
-		if dist <= AGGRO_RADIUS and dist > ENEMY_ATTACK_RANGE:
+		if dist <= AGGRO_RADIUS and dist > _enemy_hold_distance(node):
 			var dir := (player_pos - pos).normalized()
 			PlaneCoords.set_body_velocity(node, dir * float(node.move_speed))
 			if node is CharacterBody3D:
 				(node as CharacterBody3D).move_and_slide()
 			elif node is CharacterBody2D:
 				(node as CharacterBody2D).move_and_slide()
+			if node.has_method("refresh_motion_anim"):
+				node.refresh_motion_anim()
 		else:
 			PlaneCoords.set_body_velocity(node, Vector2.ZERO)
 
@@ -442,3 +500,73 @@ func _flush_archer_impacts() -> void:
 	while not _archer_impact_queue.is_empty():
 		var impact: Dictionary = _archer_impact_queue.pop_front()
 		_apply_archer_impact(impact)
+
+
+func _enemy_hold_distance(node: Node) -> float:
+	var reach := ENEMY_ATTACK_RANGE
+	if node != null and node.has_method("get_attack_range"):
+		reach = float(node.get_attack_range())
+	var effective := minf(reach, AGGRO_RADIUS)
+	return maxf(MELEE_RANGE * 0.55, effective * 0.62)
+
+
+func _pick_enemy_skill(skills: Array, cds: Dictionary) -> Dictionary:
+	var ready: Array = []
+	for skill in skills:
+		if not skill is Dictionary:
+			continue
+		var sid := str(skill.get("id", ""))
+		if sid == "":
+			continue
+		if float(cds.get(sid, 0.0)) > 0.0:
+			continue
+		ready.append(skill)
+	if ready.is_empty():
+		return {}
+	return ready[randi() % ready.size()]
+
+
+func _queue_mob_projectile(ev: Dictionary, enemy_index: int) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	if enemy_index < 0 or enemy_index >= enemies.size():
+		return
+	var node = enemies[enemy_index]
+	if node == null or not is_instance_valid(node):
+		return
+	if not node.has_method("get_mob_vfx"):
+		_apply_mob_player_impact(ev)
+		return
+	var vfx: MobVfx = node.get_mob_vfx()
+	if vfx == null:
+		_apply_mob_player_impact(ev)
+		return
+	var skills: Array = node.skills if "skills" in node else []
+	var skill: Dictionary = {}
+	var sid := str(ev.get("skill_id", ""))
+	for item in skills:
+		if item is Dictionary and str(item.get("id", "")) == sid:
+			skill = item
+			break
+	if skill.is_empty():
+		skill = {
+			"projectile": str(ev.get("projectile", "carrot")),
+			"speed": float(ev.get("speed", 280.0)),
+		}
+	var from := PlaneCoords.from_node(node) + Vector2(0, -10)
+	var captured: Dictionary = ev.duplicate()
+	vfx.play_skill(sid, skill, from, player as Node2D, func(): _apply_mob_player_impact(captured))
+
+
+func _apply_mob_player_impact(ev: Dictionary) -> void:
+	if ev.is_empty() or player == null:
+		return
+	var dmg := int(ev.get("damage", 0))
+	if dmg > 0:
+		player.hp = maxf(0.0, float(player.hp) - float(dmg))
+		_spawn_float(PlaneCoords.from_node(player), "-%d" % dmg, Color(1, 0.45, 0.4))
+		if player.has_method("play_hit_anim"):
+			player.play_hit_anim()
+	var parent := get_parent()
+	if parent != null and dmg > 0:
+		HitSpark.spawn(parent, PlaneCoords.from_node(player), false)

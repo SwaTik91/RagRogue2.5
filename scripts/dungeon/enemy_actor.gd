@@ -1,5 +1,8 @@
 extends CharacterBody2D
 
+const HP_BAR_HALF_W := 24.0
+const HP_BAR_H := 6.0
+
 var monster_id: String = ""
 var display_name: String = ""
 var hp: float = 1.0
@@ -8,10 +11,16 @@ var atk: int = 1
 var defense: int = 0
 var tier: int = 1
 var move_speed: float = 80.0
+var attack_range: float = 90.0
+var is_boss: bool = false
+var skills: Array = []
 var cds: Dictionary = {}
 var _animator := ActorAnimator.new()
+var _mob_vfx: MobVfx = null
 
 @onready var _anim_sprite: AnimatedSprite2D = $Sprite
+@onready var _hp_fill: Polygon2D = $HpBar/Fill
+@onready var _hp_label: Label = $HpLabel
 
 
 func bind_monster(def: Dictionary) -> void:
@@ -22,9 +31,24 @@ func bind_monster(def: Dictionary) -> void:
 	atk = int(def.get("atk", 1))
 	defense = int(def.get("def", 0))
 	tier = int(def.get("tier", 1))
+	attack_range = float(def.get("attack_range", 90.0))
+	is_boss = bool(def.get("is_boss", false))
+	skills = def.get("skills", []) if def.get("skills") is Array else []
 	cds.clear()
+	if is_boss:
+		move_speed = 65.0
+	_sync_mob_vfx()
 	_apply_look()
 	refresh_alive()
+	_update_hp_display()
+
+
+func get_attack_range() -> float:
+	return attack_range
+
+
+func get_mob_vfx() -> MobVfx:
+	return _mob_vfx
 
 
 func play_combat_anim(skill_id: String = "") -> void:
@@ -42,8 +66,10 @@ func refresh_motion_anim() -> void:
 func _ready() -> void:
 	if _anim_sprite != null:
 		_animator.setup(_anim_sprite, self)
+	_sync_mob_vfx()
 	if monster_id != "":
 		_apply_look()
+	_update_hp_display()
 
 
 func _process(delta: float) -> void:
@@ -52,7 +78,16 @@ func _process(delta: float) -> void:
 
 func to_combatant() -> Dictionary:
 	var pos := global_position if is_inside_tree() else position
-	return {"pos": pos, "hp": hp}
+	return {
+		"pos": pos,
+		"hp": hp,
+		"hp_max": hp_max,
+		"atk": atk,
+		"def": defense,
+		"attack_range": attack_range,
+		"skills": skills,
+		"monster_id": monster_id,
+	}
 
 
 func refresh_alive() -> void:
@@ -61,6 +96,44 @@ func refresh_alive() -> void:
 	var shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape != null:
 		shape.disabled = not alive
+	if not alive:
+		_update_hp_display()
+
+
+func set_hp_value(value: float) -> void:
+	hp = value
+	_update_hp_display()
+
+
+func _update_hp_display() -> void:
+	var pct := clampf(hp / hp_max, 0.0, 1.0) if hp_max > 0.0 else 0.0
+	if _hp_fill != null:
+		var w := HP_BAR_HALF_W * 2.0 * pct
+		_hp_fill.polygon = PackedVector2Array([
+			Vector2(-HP_BAR_HALF_W, -HP_BAR_H / 2.0),
+			Vector2(-HP_BAR_HALF_W + w, -HP_BAR_H / 2.0),
+			Vector2(-HP_BAR_HALF_W + w, HP_BAR_H / 2.0),
+			Vector2(-HP_BAR_HALF_W, HP_BAR_H / 2.0),
+		])
+		if is_boss:
+			_hp_fill.color = Color(1.0, 0.55, 0.35, 1.0)
+		else:
+			_hp_fill.color = Color(0.35, 0.88, 0.42, 1.0)
+	if _hp_label != null:
+		_hp_label.text = "%d/%d" % [maxi(0, int(ceil(hp))), int(hp_max)]
+		_hp_label.visible = hp > 0.0 and hp < hp_max
+
+
+func _sync_mob_vfx() -> void:
+	if skills.is_empty():
+		if _mob_vfx != null:
+			_mob_vfx.queue_free()
+			_mob_vfx = null
+		return
+	if _mob_vfx == null:
+		_mob_vfx = MobVfx.new()
+		_mob_vfx.name = "MobVfx"
+		add_child(_mob_vfx)
 
 
 func _apply_look() -> void:
@@ -83,9 +156,13 @@ func _apply_look() -> void:
 		"stone_beetle":
 			body.color = Color(0.55, 0.38, 0.22, 1)
 			scale = Vector2(1.05, 1.05)
-		"act_boss":
-			body.color = Color(0.55, 0.22, 0.62, 1)
-			scale = Vector2(1.7, 1.7)
+		"angel_mvp", "act_boss":
+			body.color = Color(0.95, 0.92, 0.75, 1)
+			scale = Vector2(1.85, 1.85)
+		"lunatic":
+			body.color = Color(0.82, 0.45, 0.28, 1)
+		"drops":
+			body.color = Color(0.55, 0.32, 0.72, 1)
 		_:
 			body.color = Color(0.38, 0.72, 0.42, 1)
 			scale = Vector2.ONE

@@ -1,6 +1,14 @@
 extends RefCounted
 
-const CATALOG_IDS := ["cave_slime", "stone_beetle", "act_boss"]
+const CATALOG_IDS := [
+	"cave_slime",
+	"stone_beetle",
+	"lunatic",
+	"drops",
+	"angel_mvp",
+	"act_boss",
+]
+const DROPS_PACK := ["drops", "drops", "drops"]
 const PLACEHOLDERS := ["mob_a", "boss_act1"]
 
 
@@ -66,19 +74,12 @@ func _test_monster_ids_match_catalog(errors: Array) -> void:
 						errors.append("FloorGen id %s is not in monsters.json catalog" % id_str)
 						return
 				if room.get("type") == RoomType.Value.COMBAT:
-					if ids.is_empty():
-						errors.append("COMBAT room should have monster_ids")
-						return
-					if "act_boss" in ids:
-						errors.append("COMBAT room should not spawn act_boss")
+					if ids != DROPS_PACK:
+						errors.append("COMBAT room should spawn 3 drops, got %s" % str(ids))
 						return
 				if room.get("type") == RoomType.Value.BOSS:
-					if ids != ["act_boss"]:
-						errors.append("BOSS room should emit [act_boss], got %s" % str(ids))
+					if ids != DROPS_PACK:
+						errors.append("BOSS room should spawn 3 drops, got %s" % str(ids))
 						return
-	if not seen.has("cave_slime"):
-		errors.append("FloorGen should emit cave_slime")
-	if not seen.has("stone_beetle"):
-		errors.append("FloorGen should emit stone_beetle")
-	if not seen.has("act_boss"):
-		errors.append("FloorGen should emit act_boss on the final floor")
+	if not seen.has("drops"):
+		errors.append("FloorGen should emit drops")

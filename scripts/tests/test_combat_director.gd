@@ -31,8 +31,8 @@ func _test_ranges_and_aggro(director, errors: Array) -> void:
 		errors.append("Mage attack range should be 160")
 	if not is_equal_approx(float(director.attack_range_for_class(ClassId.Value.ARCHER)), 320.0):
 		errors.append("Archer attack range should be 320")
-	if not is_equal_approx(float(director.AGGRO_RADIUS), 180.0):
-		errors.append("AGGRO_RADIUS should be 180")
+	if not is_equal_approx(float(director.AGGRO_RADIUS), 360.0):
+		errors.append("AGGRO_RADIUS should be 360")
 
 
 func _test_combatant_dict_shape(director, errors: Array) -> void:

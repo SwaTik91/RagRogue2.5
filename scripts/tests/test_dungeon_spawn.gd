@@ -15,18 +15,14 @@ func _test_monsters_json(errors: Array) -> void:
 		return
 	var file := FileAccess.open("res://data/monsters.json", FileAccess.READ)
 	var parsed = JSON.parse_string(file.get_as_text())
-	if not (parsed is Array) or parsed.size() != 3:
-		errors.append("monsters.json should be an array of 3 defs")
+	if not (parsed is Array) or parsed.is_empty():
+		errors.append("monsters.json should be a non-empty array")
 		return
 	var by_id := {}
 	for item in parsed:
 		by_id[str(item.get("id", ""))] = item
-	if not by_id.has("cave_slime") or int(by_id["cave_slime"].get("hp", 0)) != 20:
-		errors.append("cave_slime should have hp 20")
-	if not by_id.has("stone_beetle") or int(by_id["stone_beetle"].get("atk", 0)) != 5:
-		errors.append("stone_beetle should have atk 5")
-	if not by_id.has("act_boss") or str(by_id["act_boss"].get("name", "")) != "Vault Warden":
-		errors.append("act_boss should be Vault Warden")
+	if not by_id.has("drops") or int(by_id["drops"].get("hp", 0)) != 32:
+		errors.append("drops should have hp 32")
 
 
 func _test_spawn_plan_from_ids(errors: Array) -> void:

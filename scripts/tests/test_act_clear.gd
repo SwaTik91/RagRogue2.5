@@ -68,8 +68,8 @@ func _test_debug_short_act_builds_one_combat_and_boss(errors: Array) -> void:
 	if int(rooms[1].get("type", -1)) != RoomType.Value.BOSS:
 		errors.append("short act second room should be BOSS")
 	var boss_ids: Array = rooms[1].get("monster_ids", [])
-	if boss_ids != ["act_boss"]:
-		errors.append("short act boss should be act_boss, got %s" % str(boss_ids))
+	if boss_ids != ["drops", "drops", "drops"]:
+		errors.append("short act boss should be 3 drops, got %s" % str(boss_ids))
 	session.run.on_room_cleared()
 	session.run.on_room_cleared()
 	if int(session.run.floor_index) < 1:

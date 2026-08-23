@@ -58,7 +58,7 @@ offset_top = 16.0
 offset_right = 320.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 22
-text = "HP --/--  v0.1.28"
+text = "HP --/--  v0.1.29"
 
 [node name="BannerLabel" type="Label" parent="HUD/SafeArea"]
 layout_mode = 2
