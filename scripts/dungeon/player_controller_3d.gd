@@ -25,7 +25,11 @@ func _ready() -> void:
 
 
 func play_combat_anim(is_skill: bool = false) -> void:
-	if _visual != null and _visual.has_method("play_attack_pulse"):
+	if _visual == null:
+		return
+	if is_skill and _visual.has_method("play_skill"):
+		_visual.play_skill()
+	elif _visual.has_method("play_attack_pulse"):
 		_visual.play_attack_pulse()
 
 
@@ -115,6 +119,8 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 	if _visual != null and _visual.has_method("face_plane_direction"):
 		_visual.face_plane_direction(plane_v)
+	if _visual != null and _visual.has_method("update_motion"):
+		_visual.update_motion(plane_v)
 
 
 func _stick_vector() -> Vector2:

@@ -3,7 +3,7 @@ extends Node3D
 
 const VISUAL_SCENES: Dictionary = {
 	ClassId.Value.SWORDMAN: preload("res://scenes/dungeon/swordman_visual_3d.tscn"),
-	ClassId.Value.ARCHER: preload("res://scenes/dungeon/archer_visual_3d.tscn"),
+	ClassId.Value.ARCHER: preload("res://scenes/dungeon/archer_ludo_visual_3d.tscn"),
 	ClassId.Value.MAGE: preload("res://scenes/dungeon/swordman_visual_3d.tscn"),
 }
 
@@ -38,3 +38,8 @@ func play_hit_flash() -> void:
 func play_attack_pulse() -> void:
 	if _active != null and _active.has_method("play_attack_pulse"):
 		_active.play_attack_pulse()
+
+
+func play_skill() -> void:
+	if _active != null and _active.has_method("play_skill"):
+		_active.play_skill()
