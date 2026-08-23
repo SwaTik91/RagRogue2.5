@@ -16,7 +16,7 @@ var _stick: Node = null
 var demo_move_override: Vector2 = Vector2.ZERO
 var demo_move_active: bool = false
 
-@onready var _visual: Node3D = $HeroVisual3D
+@onready var _visual: Node3D = $HeroVisualRoot
 
 
 func _ready() -> void:
