@@ -14,6 +14,18 @@ python3 scripts/art/pixellab_batch.py archer
 python3 scripts/art/pixellab_batch.py --balance
 ```
 
+### Import existing web UI characters (no generations)
+
+If the trial generations are exhausted, completed mannequin characters on the account
+can be imported as static 4-dir rotations (one frame per direction):
+
+```bash
+python3 scripts/art/pixellab_batch.py archer --import-existing
+python3 scripts/art/pixellab_batch.py archer --import-existing --character-id <uuid>
+```
+
+Full animated idle/walk/attack cycles require available generations on the account.
+
 Output frames: `assets/art/anim/{actor}/{down|up|left|right}/{idle|walk|attack|skill}/frame_XX.png`
 
 Meta: `assets/art/pixellab/{actor}/meta.json`

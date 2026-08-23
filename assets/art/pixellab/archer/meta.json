@@ -1,0 +1,7 @@
+{
+  "source": "mannequin_zip",
+  "character_id": "d390eb33-bc73-49e4-9faf-604f2f555340",
+  "actor": "archer",
+  "imported_rotations": 12,
+  "note": "static single-frame per direction; run full batch when generations available"
+}

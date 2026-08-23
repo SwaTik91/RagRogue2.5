@@ -32,6 +32,14 @@ DIR_MAP = {
 }
 ALL_DIRS = list(DIR_MAP.keys())
 
+# Mannequin ZIP folders (web UI) → game animation names
+MANNEQUIN_ZIP_ANIM = {
+	"Idle": "idle",
+	"Walking": "walk",
+	"Attacking_with_a_bow": "attack",
+}
+CARDINAL_DIRS = ("south", "north", "east", "west")
+
 ACTOR_PROMPTS = {
 	"archer": (
 		"young fantasy archer, green hooded cloak, white hair, leather quiver on back, "
@@ -83,9 +91,12 @@ def load_api_key() -> str:
 	key = os.environ.get("PIXELLAB_API_KEY", "").strip()
 	if key:
 		return key
-	path = "/cursor/stores/self/pixellab/api_key.txt"
-	if os.path.isfile(path):
-		return open(path).read().strip()
+	for path in (
+		"/cursor/stores/self/pixellab/api_key.txt",
+		os.path.join(WORKSPACE, ".pixellab_api_key"),
+	):
+		if os.path.isfile(path):
+			return open(path).read().strip()
 	raise RuntimeError(
 		"Missing PixelLab API key. Set PIXELLAB_API_KEY or create "
 		"/cursor/stores/self/pixellab/api_key.txt (token from pixellab.ai/account)"
@@ -132,7 +143,7 @@ def poll_job(job_id: str, label: str, max_wait: int = 900) -> dict:
 def b64_image(path: str) -> dict:
 	with open(path, "rb") as f:
 		raw = base64.b64encode(f.read()).decode()
-	return {"base64": raw, "mime_type": "image/png"}
+	return {"type": "base64", "base64": raw, "format": "png"}
 
 
 def create_character(actor: str, ref_image: str | None) -> str:
@@ -236,7 +247,8 @@ def export_frames(actor: str, character_id: str) -> None:
 		return
 	for group in animations:
 		anim_type = str(group.get("animation_type", "")).lower()
-		game_anim = _map_anim_name(anim_type)
+		display = str(group.get("display_name", "")).lower()
+		game_anim = _map_anim_name(display) or _map_anim_name(anim_type)
 		if not game_anim:
 			continue
 		for dir_entry in group.get("directions", []):
@@ -267,6 +279,78 @@ def _map_anim_name(pl_type: str) -> str | None:
 			return val
 	if pl_type in ("idle", "walk", "attack", "skill"):
 		return pl_type
+	return None
+
+
+def import_mannequin_zip(character_id: str, actor: str, copy_skill_from_attack: bool = True) -> None:
+	"""Import static 4-dir rotations from a PixelLab mannequin group ZIP (no new generations)."""
+	key = load_api_key()
+	zip_url = f"{API_BASE}/characters/{character_id}/zip"
+	req = urllib.request.Request(
+		zip_url,
+		headers={"Authorization": f"Bearer {key}"},
+	)
+	print(f"download ZIP for {character_id}...", flush=True)
+	with urllib.request.urlopen(req, timeout=300) as resp:
+		zdata = resp.read()
+	out_zip = f"{META_ROOT}/{actor}/import.zip"
+	os.makedirs(os.path.dirname(out_zip), exist_ok=True)
+	with open(out_zip, "wb") as f:
+		f.write(zdata)
+	zf = zipfile.ZipFile(BytesIO(zdata))
+	imported = 0
+	for zip_anim, game_anim in MANNEQUIN_ZIP_ANIM.items():
+		for pl_dir in CARDINAL_DIRS:
+			game_dir = DIR_MAP[pl_dir]
+			inner = f"{zip_anim}/rotations/{pl_dir}.png"
+			if inner not in zf.namelist():
+				print(f"  skip missing {inner}", flush=True)
+				continue
+			folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
+			os.makedirs(folder, exist_ok=True)
+			dest = f"{folder}/frame_00.png"
+			with open(dest, "wb") as out:
+				out.write(zf.read(inner))
+			imported += 1
+			print(f"  {game_anim}/{game_dir}", flush=True)
+	if copy_skill_from_attack:
+		for pl_dir in CARDINAL_DIRS:
+			game_dir = DIR_MAP[pl_dir]
+			src = f"{ANIM_ROOT}/{actor}/{game_dir}/attack/frame_00.png"
+			dst_folder = f"{ANIM_ROOT}/{actor}/{game_dir}/skill"
+			if os.path.isfile(src):
+				os.makedirs(dst_folder, exist_ok=True)
+				with open(src, "rb") as s, open(f"{dst_folder}/frame_00.png", "wb") as d:
+					d.write(s.read())
+	json.dump(
+		{
+			"source": "mannequin_zip",
+			"character_id": character_id,
+			"actor": actor,
+			"imported_rotations": imported,
+			"note": "static single-frame per direction; run full batch when generations available",
+		},
+		open(f"{META_ROOT}/{actor}/meta.json", "w"),
+		indent=2,
+	)
+	print(f"imported {imported} rotations → {ANIM_ROOT}/{actor}/", flush=True)
+
+
+def find_mannequin_character_id(actor: str) -> str | None:
+	"""Pick a completed mannequin character from the account (Walking state preferred for ZIP bundle)."""
+	resp = api("GET", "/characters?limit=50")
+	for ch in resp.get("characters", []):
+		if ch.get("status") != "completed":
+			continue
+		if ch.get("template_id") != "mannequin":
+			continue
+		state = str(ch.get("state_name", "")).lower()
+		if actor == "archer" and "sniper" in str(ch.get("prompt", "")).lower():
+			if "walking" in state:
+				return ch["id"]
+	for ch in resp.get("characters", []):
+		if ch.get("status") == "completed" and ch.get("template_id") == "mannequin":
+			return ch["id"]
 	return None
 
 
@@ -303,9 +387,27 @@ def main() -> None:
 	parser.add_argument("actor", nargs="?", default="archer", help="archer|swordman|mage")
 	parser.add_argument("--force", action="store_true", help="recreate character")
 	parser.add_argument("--balance", action="store_true", help="print API balance only")
+	parser.add_argument(
+		"--import-existing",
+		action="store_true",
+		help="import completed mannequin ZIP from account (no generations used)",
+	)
+	parser.add_argument(
+		"--character-id",
+		default="",
+		help="PixelLab character id for --import-existing ZIP download",
+	)
 	args = parser.parse_args()
 	if args.balance:
 		print(json.dumps(api("GET", "/balance"), indent=2))
+		return
+	if args.import_existing:
+		cid = args.character_id.strip()
+		if not cid:
+			cid = find_mannequin_character_id(args.actor)
+		if not cid:
+			raise RuntimeError("no completed mannequin character found on account")
+		import_mannequin_zip(cid, args.actor)
 		return
 	run_actor(args.actor, force=args.force)
 
