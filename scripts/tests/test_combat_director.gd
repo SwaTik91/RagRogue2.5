@@ -16,6 +16,7 @@ func run() -> Array:
 	_test_player_strikes_in_range(director, errors)
 	_test_no_strike_outside_range(director, errors)
 	_test_cds_tick_and_skill_without_input(director, errors)
+	_test_god_mode_blocks_defeat(director, errors)
 	_test_mage_dies_standing_in_pack(director, errors)
 	director.free()
 	return errors
@@ -125,6 +126,38 @@ func _test_cds_tick_and_skill_without_input(director, errors: Array) -> void:
 	for method_name in ["attack", "cast_skill", "fire_skill", "use_skill"]:
 		if director.has_method(method_name):
 			errors.append("CombatDirector must not expose input attack method " + method_name)
+
+
+func _test_god_mode_blocks_defeat(director, errors: Array) -> void:
+	if not director.has_method("set_god_mode"):
+		errors.append("CombatDirector.set_god_mode should exist")
+		return
+	director.set_god_mode(true)
+	var player := {
+		"pos": Vector2.ZERO,
+		"hp": 30.0,
+		"hp_max": 30.0,
+		"atk": 4,
+		"def": 0,
+		"class_id": ClassId.Value.MAGE,
+	}
+	var enemies: Array = [
+		{
+			"pos": Vector2(40, 0),
+			"hp": 200.0,
+			"hp_max": 200.0,
+			"atk": 50,
+			"def": 0,
+			"attack_range": 90.0,
+			"skills": [],
+		}
+	]
+	for _i in 20:
+		var tick: Dictionary = director.simulate_tick(player, enemies, [], {}, [{}], 1.0)
+		if tick.get("defeated", false) or float(player.hp) <= 0.0:
+			errors.append("god mode should prevent player defeat")
+			break
+	director.set_god_mode(false)
 
 
 func _test_mage_dies_standing_in_pack(director, errors: Array) -> void:

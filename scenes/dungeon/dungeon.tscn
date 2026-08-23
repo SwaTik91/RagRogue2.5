@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_stick.tscn" id="2_stick"]
 [ext_resource type="Script" path="res://scripts/dungeon/combat_director.gd" id="3_cd"]
 [ext_resource type="Script" path="res://scripts/ui/ui_safe_area_margins.gd" id="4_safe"]
+[ext_resource type="Script" path="res://scripts/ui/god_mode_button.gd" id="5_god"]
 
 [sub_resource type="RectangleShape2D" id="WallH"]
 size = Vector2(4080, 80)
@@ -59,6 +60,20 @@ offset_right = 320.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 22
 text = "HP --/--  v0.1.30"
+
+[node name="GodModeButton" type="Button" parent="HUD/SafeArea"]
+layout_mode = 2
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 52.0
+theme_override_font_sizes/font_size = 18
+toggle_mode = true
+text = "GOD"
+script = ExtResource("5_god")
 
 [node name="BannerLabel" type="Label" parent="HUD/SafeArea"]
 layout_mode = 2

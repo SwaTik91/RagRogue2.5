@@ -15,12 +15,31 @@ var enemies: Array = []
 var combat_paused: bool = false
 var defeated: bool = false
 var room_cleared: bool = false
+var god_mode: bool = false
 var _archer_impact_queue: Array = []
 var _mob_player_impact_queue: Array = []
 
 
 func _ready() -> void:
 	add_to_group(&"combat_director")
+
+
+func set_god_mode(active: bool) -> void:
+	god_mode = active
+	if god_mode and player != null and is_instance_valid(player):
+		player.hp = maxf(1.0, float(player.hp))
+
+
+func _damage_player(player_state: Dictionary, amount: float) -> float:
+	if god_mode or amount <= 0.0:
+		return 0.0
+	player_state.hp = maxf(0.0, float(player_state.hp) - amount)
+	return amount
+
+
+func _finalize_player_state(player_state: Dictionary) -> void:
+	if god_mode:
+		player_state.hp = maxf(1.0, float(player_state.get("hp", 1.0)))
 
 
 func attack_range_for_class(class_id: int) -> float:
@@ -147,7 +166,7 @@ func enemy_act(enemy: Dictionary, player_state: Dictionary, cds: Dictionary) -> 
 					int(round(float(enemy.get("atk", 1)) * aoe_mult)),
 					int(player_state.get("def", 0))
 				)
-				player_state.hp = maxf(0.0, float(player_state.hp) - float(aoe_dmg))
+				_damage_player(player_state, float(aoe_dmg))
 				return {
 					"applied": true,
 					"skill_id": sid,
@@ -168,14 +187,14 @@ func enemy_act(enemy: Dictionary, player_state: Dictionary, cds: Dictionary) -> 
 					"kind": "projectile",
 					"deferred": true,
 				}
-			player_state.hp = maxf(0.0, float(player_state.hp) - float(dmg))
+			_damage_player(player_state, float(dmg))
 			return {"applied": true, "skill_id": sid, "damage": dmg}
 	if dist > ENEMY_ATTACK_RANGE:
 		return empty
 	if float(cds.get(BASIC_CD_KEY, 0.0)) > 0.0:
 		return empty
 	var dmg := AutoCombat.basic_damage(int(enemy.get("atk", 1)), int(player_state.get("def", 0)))
-	player_state.hp = maxf(0.0, float(player_state.hp) - float(dmg))
+	_damage_player(player_state, float(dmg))
 	cds[BASIC_CD_KEY] = ENEMY_BASIC_CD
 	return {"applied": true, "damage": dmg}
 
@@ -221,6 +240,9 @@ func simulate_tick(
 			any_alive = true
 			break
 	var is_defeated := float(player_state.get("hp", 0.0)) <= 0.0
+	_finalize_player_state(player_state)
+	if god_mode:
+		is_defeated = false
 	return {
 		"player_hp": player_state.hp,
 		"defeated": is_defeated,
@@ -315,6 +337,7 @@ func _read_enemy_cds() -> Array:
 
 
 func _write_player(player_state: Dictionary) -> void:
+	_finalize_player_state(player_state)
 	var before := float(player.hp)
 	player.hp = float(player_state.hp)
 	if player.hp < before:
@@ -609,7 +632,7 @@ func _queue_mob_projectile(ev: Dictionary, enemy_index: int) -> void:
 
 
 func apply_player_dot(damage: int) -> void:
-	if player == null or not is_instance_valid(player) or damage <= 0:
+	if god_mode or player == null or not is_instance_valid(player) or damage <= 0:
 		return
 	player.hp = maxf(0.0, float(player.hp) - float(damage))
 	_spawn_float(PlaneCoords.from_node(player), "-%d" % damage, Color(1.0, 0.55, 0.25))
@@ -642,7 +665,7 @@ func _queue_ground_burn(ev: Dictionary, enemy_index: int) -> void:
 
 
 func _apply_mob_player_impact(ev: Dictionary) -> void:
-	if ev.is_empty() or player == null:
+	if god_mode or ev.is_empty() or player == null:
 		return
 	var dmg := int(ev.get("damage", 0))
 	if dmg > 0:
