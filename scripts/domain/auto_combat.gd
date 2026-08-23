@@ -44,6 +44,8 @@ static func _is_off_cd(skill_id: String, cds: Dictionary) -> bool:
 static func _first_kind_off_cd(skills: Array, cds: Dictionary, kind: String) -> String:
 	for item in skills:
 		var skill: SkillDef = item
+		if skill.kind == "passive":
+			continue
 		if skill.kind != kind:
 			continue
 		if _is_off_cd(skill.id, cds):
@@ -56,6 +58,8 @@ static func _highest_power_kind_off_cd(skills: Array, cds: Dictionary, kind: Str
 	var best_power := -1
 	for item in skills:
 		var skill: SkillDef = item
+		if skill.kind == "passive":
+			continue
 		if skill.kind != kind:
 			continue
 		if not _is_off_cd(skill.id, cds):

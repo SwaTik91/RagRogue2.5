@@ -15,6 +15,7 @@ var enemies: Array = []
 var combat_paused: bool = false
 var defeated: bool = false
 var room_cleared: bool = false
+var _archer_impact_queue: Array = []
 
 
 func attack_range_for_class(class_id: int) -> float:
@@ -239,6 +240,7 @@ func _write_player(player_state: Dictionary) -> void:
 
 
 func _write_enemies(foes: Array) -> void:
+	var defer_archer_hit := _is_archer_player()
 	for foe in foes:
 		var node = foe.get("node")
 		if node == null or not is_instance_valid(node):
@@ -246,9 +248,17 @@ func _write_enemies(foes: Array) -> void:
 		var before := float(node.hp)
 		node.hp = float(foe.hp)
 		if node.hp < before:
-			_spawn_float(PlaneCoords.from_node(node), "-%d" % int(before - node.hp), Color(1, 0.86, 0.35))
-			if node.has_method("play_hit_anim"):
-				node.play_hit_anim()
+			var dmg := int(before - node.hp)
+			if defer_archer_hit:
+				_archer_impact_queue.append({
+					"node": node,
+					"damage": dmg,
+					"pos": PlaneCoords.from_node(node),
+				})
+			else:
+				_spawn_float(PlaneCoords.from_node(node), "-%d" % dmg, Color(1, 0.86, 0.35))
+				if node.has_method("play_hit_anim"):
+					node.play_hit_anim()
 		if node.has_method("refresh_alive"):
 			node.refresh_alive()
 
@@ -259,15 +269,17 @@ func _play_combat_events(events: Array) -> void:
 			continue
 		var kind := str(ev.get("type", ""))
 		if kind == "player_attack":
+			var skill_id := str(ev.get("skill_id", ""))
 			if player != null and player.has_method("play_combat_anim"):
-				var skill_id := str(ev.get("skill_id", ""))
-				player.play_combat_anim(skill_id != "")
+				player.play_combat_anim(skill_id)
+			if _is_archer_player():
+				_play_archer_attack_vfx(skill_id, int(ev.get("target_index", -1)))
 		elif kind == "enemy_attack":
 			var idx := int(ev.get("enemy_index", -1))
 			if idx >= 0 and idx < enemies.size():
 				var node = enemies[idx]
 				if node != null and node.has_method("play_combat_anim"):
-					node.play_combat_anim(false)
+					node.play_combat_anim("")
 
 
 func _write_enemy_cds(enemy_cds: Array) -> void:
@@ -364,3 +376,69 @@ func _find_skill(skills: Array, skill_id: String) -> SkillDef:
 		if item is SkillDef and item.id == skill_id:
 			return item
 	return null
+
+
+func _is_archer_player() -> bool:
+	return player != null and "class_id" in player and int(player.class_id) == ClassId.Value.ARCHER
+
+
+func _play_archer_attack_vfx(skill_id: String, target_index: int) -> void:
+	if player == null or not player.has_method("get_archer_vfx"):
+		return
+	var vfx: ArcherVfx = player.get_archer_vfx()
+	if vfx == null:
+		_flush_archer_impacts()
+		return
+	var impacts: Array = _archer_impact_queue.duplicate()
+	_archer_impact_queue.clear()
+	if impacts.is_empty():
+		return
+	var from := PlaneCoords.from_node(player) + Vector2(0, -6)
+	if skill_id == ArcherVfx.SKILL_DOUBLE_STRIFE and impacts.size() == 1:
+		var impact: Dictionary = impacts[0]
+		var node = impact.get("node")
+		if node != null and is_instance_valid(node):
+			vfx.play_attack(
+				skill_id,
+				from,
+				node,
+				func(): _apply_archer_impact(impact),
+			)
+			return
+	for impact in impacts:
+		if not impact is Dictionary:
+			continue
+		var node = impact.get("node")
+		if node == null or not is_instance_valid(node):
+			_apply_archer_impact(impact)
+			continue
+		var captured: Dictionary = impact
+		vfx.play_attack("", from, node, func(): _apply_archer_impact(captured))
+
+
+func _apply_archer_impact(impact: Dictionary) -> void:
+	if impact.is_empty():
+		return
+	var node = impact.get("node")
+	var dmg := int(impact.get("damage", 0))
+	var pos: Vector2 = impact.get("pos", Vector2.ZERO)
+	if node != null and is_instance_valid(node):
+		pos = PlaneCoords.from_node(node)
+	var fire := false
+	if player != null and player.has_method("get_archer_vfx"):
+		var vfx: ArcherVfx = player.get_archer_vfx()
+		if vfx != null:
+			fire = vfx.uses_fire_arrows()
+	var parent := get_parent()
+	if parent != null:
+		HitSpark.spawn(parent, pos, fire)
+	if dmg > 0:
+		_spawn_float(pos, "-%d" % dmg, Color(1, 0.86, 0.35))
+	if node != null and is_instance_valid(node) and node.has_method("play_hit_anim"):
+		node.play_hit_anim()
+
+
+func _flush_archer_impacts() -> void:
+	while not _archer_impact_queue.is_empty():
+		var impact: Dictionary = _archer_impact_queue.pop_front()
+		_apply_archer_impact(impact)

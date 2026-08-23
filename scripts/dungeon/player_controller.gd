@@ -18,6 +18,8 @@ var demo_move_active: bool = false
 
 
 var _animator := ActorAnimator.new()
+var _archer_vfx: ArcherVfx = null
+var _hero_level := 1
 
 @onready var _anim_sprite: AnimatedSprite2D = $Sprite
 
@@ -34,12 +36,30 @@ func _setup_animator() -> void:
 		_animator.setup(_anim_sprite, self)
 
 
-func play_combat_anim(is_skill: bool = false) -> void:
+func play_combat_anim(skill_id: String = "") -> void:
+	var is_skill := skill_id != ""
 	_animator.play_attack(is_skill)
 
 
 func play_hit_anim() -> void:
 	_animator.play_hit()
+
+
+func get_archer_vfx() -> ArcherVfx:
+	return _archer_vfx
+
+
+func _sync_archer_vfx() -> void:
+	if class_id != ClassId.Value.ARCHER:
+		if _archer_vfx != null:
+			_archer_vfx.queue_free()
+			_archer_vfx = null
+		return
+	if _archer_vfx == null:
+		_archer_vfx = ArcherVfx.new()
+		add_child(_archer_vfx)
+	var vfx_root := get_parent()
+	_archer_vfx.configure(skills, _hero_level, vfx_root)
 
 
 func set_demo_move(v: Vector2) -> void:
@@ -58,9 +78,11 @@ func bind_hero(hero: Hero, modifiers: Array = []) -> void:
 	_apply_combat_stats(CombatStats.from_hero(hero, modifiers))
 	hp = hp_max
 	class_id = hero.class_id
+	_hero_level = hero.level
 	skills = _load_class_skills(hero)
 	cds.clear()
 	_apply_look()
+	_sync_archer_vfx()
 
 
 func apply_run_stats(hero: Hero, modifiers: Array = []) -> void:
@@ -72,6 +94,8 @@ func apply_run_stats(hero: Hero, modifiers: Array = []) -> void:
 	if gained > 0.0:
 		hp += gained
 	hp = minf(hp, hp_max)
+	_hero_level = hero.level
+	_sync_archer_vfx()
 
 
 func _apply_combat_stats(stats: Dictionary) -> void:

@@ -10,8 +10,11 @@
   {"id": "rift_needle", "name": "Rift Needle", "class_id": 1, "cooldown": 4.5, "power": 13, "kind": "single", "unlock_level": 3},
   {"id": "sunwell_bloom", "name": "Sunwell Bloom", "class_id": 1, "cooldown": 8.0, "power": 11, "kind": "aoe", "unlock_level": 5},
   {"id": "hawk_pin", "name": "Hawk Pin", "class_id": 2, "cooldown": 2.5, "power": 8, "kind": "single", "unlock_level": 1},
-  {"id": "split_flight", "name": "Split Flight", "class_id": 2, "cooldown": 5.5, "power": 6, "kind": "aoe", "unlock_level": 1},
-  {"id": "trail_salve", "name": "Trail Salve", "class_id": 2, "cooldown": 8.0, "power": 11, "kind": "heal", "unlock_level": 1},
-  {"id": "wind_mark", "name": "Wind Mark", "class_id": 2, "cooldown": 4.0, "power": 12, "kind": "single", "unlock_level": 3},
-  {"id": "skyline_volley", "name": "Skyline Volley", "class_id": 2, "cooldown": 7.0, "power": 10, "kind": "aoe", "unlock_level": 5}
+  {"id": "double_strife", "name": "Double Strife", "class_id": 2, "cooldown": 3.5, "power": 11, "kind": "single", "unlock_level": 1},
+  {"id": "arrow_ring", "name": "Arrow Ring", "class_id": 2, "cooldown": 0, "power": 0, "kind": "passive", "unlock_level": 1},
+  {"id": "super_bow", "name": "Super Bow", "class_id": 2, "cooldown": 0, "power": 0, "kind": "passive", "unlock_level": 1},
+  {"id": "split_flight", "name": "Split Flight", "class_id": 2, "cooldown": 5.5, "power": 6, "kind": "aoe", "unlock_level": 5},
+  {"id": "trail_salve", "name": "Trail Salve", "class_id": 2, "cooldown": 8.0, "power": 11, "kind": "heal", "unlock_level": 5},
+  {"id": "wind_mark", "name": "Wind Mark", "class_id": 2, "cooldown": 4.0, "power": 12, "kind": "single", "unlock_level": 7},
+  {"id": "skyline_volley", "name": "Skyline Volley", "class_id": 2, "cooldown": 7.0, "power": 10, "kind": "aoe", "unlock_level": 9}
 ]

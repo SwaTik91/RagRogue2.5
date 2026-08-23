@@ -27,8 +27,8 @@ func bind_monster(def: Dictionary) -> void:
 	refresh_alive()
 
 
-func play_combat_anim(is_skill: bool = false) -> void:
-	_animator.play_attack(is_skill)
+func play_combat_anim(skill_id: String = "") -> void:
+	_animator.play_attack(skill_id != "")
 
 
 func play_hit_anim() -> void:
