@@ -68,8 +68,8 @@ func _test_debug_short_act_builds_one_combat_and_boss(errors: Array) -> void:
 	if int(rooms[1].get("type", -1)) != RoomType.Value.BOSS:
 		errors.append("short act second room should be BOSS")
 	var boss_ids: Array = rooms[1].get("monster_ids", [])
-	if boss_ids != ["drops", "drops", "drops"]:
-		errors.append("short act boss should be 3 drops, got %s" % str(boss_ids))
+	if boss_ids != ["angel_mvp"]:
+		errors.append("short act boss should be angel_mvp, got %s" % str(boss_ids))
 	session.run.on_room_cleared()
 	session.run.on_room_cleared()
 	if int(session.run.floor_index) < 1:
@@ -93,10 +93,10 @@ func _test_combat_clear_waits_for_upgrade_then_advances(errors: Array) -> void:
 	var session = _make_session()
 	session.start_run()
 	session.run.rooms = [
-		{"type": RoomType.Value.COMBAT, "monster_ids": ["cave_slime"], "cleared": false},
+		{"type": RoomType.Value.COMBAT, "monster_ids": ["drops", "drops", "drops"], "cleared": false},
 		{"type": RoomType.Value.LOOT, "monster_ids": [], "cleared": false},
 		{"type": RoomType.Value.EVENT, "monster_ids": [], "cleared": false},
-		{"type": RoomType.Value.COMBAT, "monster_ids": ["stone_beetle"], "cleared": false}
+		{"type": RoomType.Value.COMBAT, "monster_ids": ["drops", "drops", "drops"], "cleared": false}
 	]
 	session.run.room_index = 0
 	session.run.floor_index = 0
@@ -111,10 +111,10 @@ func _test_combat_clear_waits_for_upgrade_then_advances(errors: Array) -> void:
 	if session.run.modifiers.size() != 1 or session.run.modifiers[0] != "atk_up":
 		errors.append("picked upgrade should call run.apply_upgrade, got %s" % str(session.run.modifiers))
 	if session.run.room_index != 3:
-		errors.append("after pick, should skip empty LOOT+EVENT to next pack, room_index=%s" % session.run.room_index)
+		errors.append("after pick, should skip empty LOOT+EVENT to next combat, room_index=%s" % session.run.room_index)
 	var ids: Array = controller.current_room_monster_ids(session.run)
-	if ids != ["stone_beetle"]:
-		errors.append("after pick+skip, current room should be stone_beetle pack, got %s" % str(ids))
+	if ids != ["drops", "drops", "drops"]:
+		errors.append("after pick+skip, current room should be drops pack, got %s" % str(ids))
 	controller.free()
 	session.free()
 
@@ -131,7 +131,7 @@ func _test_combat_clear_awards_xp(errors: Array) -> void:
 	var level_before := hero.level
 	session.start_run()
 	session.run.rooms = [
-		{"type": RoomType.Value.COMBAT, "monster_ids": ["cave_slime", "stone_beetle"], "cleared": false}
+		{"type": RoomType.Value.COMBAT, "monster_ids": ["drops", "drops"], "cleared": false}
 	]
 	session.run.room_index = 0
 	session.run.floor_index = 0
@@ -141,8 +141,8 @@ func _test_combat_clear_awards_xp(errors: Array) -> void:
 		session.free()
 		return
 	controller.handle_combat_clear(session)
-	# cave_slime tier 1 + stone_beetle tier 2 => 30 XP
-	if hero.xp != xp_before + 30 and not (hero.level > level_before):
+	# drops tier 2 x2 => 40 XP
+	if hero.xp != xp_before + 40 and not (hero.level > level_before):
 		errors.append("combat clear should award XP for spawned tiers, xp=%s level=%s" % [hero.xp, hero.level])
 	controller.free()
 	session.free()
@@ -150,7 +150,7 @@ func _test_combat_clear_awards_xp(errors: Array) -> void:
 	var session2 = _make_session()
 	session2.active_class = ClassId.Value.MAGE
 	var hero2: Hero = session2.active_hero()
-	if hero2.xp < 30 and hero2.level <= 1:
+	if hero2.xp < 40 and hero2.level <= 1:
 		errors.append("persist after combat clear should keep awarded XP, xp=%s level=%s" % [hero2.xp, hero2.level])
 	session2.free()
 
@@ -184,7 +184,7 @@ func _test_boss_clear_grants_loot_and_victory_toast(errors: Array) -> void:
 	}))
 	session.start_run()
 	session.run.rooms = [
-		{"type": RoomType.Value.BOSS, "monster_ids": ["act_boss"], "cleared": false}
+		{"type": RoomType.Value.BOSS, "monster_ids": ["angel_mvp"], "cleared": false}
 	]
 	session.run.room_index = 0
 	session.run.floor_index = FloorGen.ACT_FLOOR_COUNT - 1

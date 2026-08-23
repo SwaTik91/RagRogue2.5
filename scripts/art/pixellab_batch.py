@@ -135,14 +135,13 @@ MOB_ANIM_JOBS = {
 		},
 	],
 	"angel_mvp": [
-		{"id": "idle", "mode": "template", "template_animation_id": "breathing-idle"},
 		{"id": "walk", "mode": "template", "template_animation_id": "walk"},
 		{
 			"id": "attack",
 			"mode": "v3",
 			"action_description": (
-				"angeling boss fires holy light bolt forward from body glow, "
-				"wings flare, gentle but powerful ranged attack"
+				"dark purple angeling boss flaps tattered bat wings and lashes a crystal "
+				"pseudopod forward, aggressive top-down boss strike"
 			),
 			"frame_count": 8,
 		},
@@ -150,8 +149,8 @@ MOB_ANIM_JOBS = {
 			"id": "skill",
 			"mode": "v3",
 			"action_description": (
-				"angeling MVP channels radiant healing light upward then smites with holy burst, "
-				"boss special cast animation, wings spread wide"
+				"dark angeling boss channels violet flame and crystal energy upward, "
+				"wings spread wide, dramatic boss spell cast"
 			),
 			"frame_count": 10,
 		},
@@ -533,11 +532,33 @@ MANNEQUIN_STATE_ANIM_PREFIX = {
 	"breath_idle": "idle",
 	"breathing-idle": "idle",
 	"the_purple_slime": "walk",
+	"purple_slime": "walk",
 	"walking": "walk",
 	"walk": "walk",
 	"a_ranged_attack": "skill",
+	"flame": "skill",
+	"crystal": "skill",
 	"attack": "attack",
 }
+
+
+def _ensure_idle_from_rotations(zf: zipfile.ZipFile, actor: str, state_folder: str) -> None:
+	inv_dir_map = {v: k for k, v in DIR_MAP.items()}
+	for game_dir in ("down", "up", "left", "right"):
+		idle_path = f"{ANIM_ROOT}/{actor}/{game_dir}/idle/frame_00.png"
+		if os.path.isfile(idle_path):
+			continue
+		pl_dir = inv_dir_map.get(game_dir, "")
+		inner = f"{state_folder}/rotations/{pl_dir}.png"
+		if inner not in zf.namelist():
+			continue
+		folder = f"{ANIM_ROOT}/{actor}/{game_dir}/idle"
+		os.makedirs(folder, exist_ok=True)
+		raw = zf.read(inner)
+		for i in range(9):
+			with open(f"{folder}/frame_{i:02d}.png", "wb") as out:
+				out.write(raw)
+		print(f"  idle/{game_dir} from rotation", flush=True)
 
 
 def _map_mannequin_anim_folder(folder_name: str) -> str | None:
@@ -608,6 +629,7 @@ def import_mannequin_state_zip(
 				)
 				if frames:
 					print(f"  {game_anim}/{game_dir}: {len(frames)} frames", flush=True)
+	_ensure_idle_from_rotations(zf, actor, state_folder)
 	if copy_attack_from_skill:
 		for game_dir in ("down", "up", "left", "right"):
 			skill_dir = f"{ANIM_ROOT}/{actor}/{game_dir}/skill"
@@ -636,13 +658,17 @@ def import_mannequin_state_zip(
 	print(f"imported {imported} frames → {ANIM_ROOT}/{actor}/", flush=True)
 
 
-def import_by_tag(tag: str, actor: str) -> None:
+def import_by_tag(tag: str, actor: str, generate_anims: bool = False) -> None:
 	cid = find_character_by_tag(tag)
 	if not cid:
 		raise RuntimeError(f"no completed character with tag {tag!r}")
 	print(f"import tag {tag} → {actor} ({cid})", flush=True)
 	import_mannequin_state_zip(cid, actor)
 	write_preview_sheet(actor)
+	if generate_anims:
+		print("generating walk/attack/skill via PixelLab API...", flush=True)
+		run_actor(actor, force=False, phase="rest")
+		write_preview_sheet(actor)
 
 
 def find_mannequin_character_id(actor: str) -> str | None:
@@ -905,7 +931,12 @@ def main() -> None:
 	parser.add_argument(
 		"--import-tag",
 		default="",
-		help="import completed mannequin character by PixelLab tag (e.g. Drops2)",
+		help="import completed mannequin character by PixelLab tag (e.g. Drops2, Angeling1)",
+	)
+	parser.add_argument(
+		"--generate-anims",
+		action="store_true",
+		help="with --import-tag: also request walk/attack/skill from PixelLab API",
 	)
 	parser.add_argument(
 		"--character-id",
@@ -934,7 +965,7 @@ def main() -> None:
 		import_mannequin_zip(cid, args.actor)
 		return
 	if args.import_tag.strip():
-		import_by_tag(args.import_tag.strip(), args.actor)
+		import_by_tag(args.import_tag.strip(), args.actor, generate_anims=args.generate_anims)
 		return
 	_dispatch(args.actor, force=args.force, phase=args.phase)
 

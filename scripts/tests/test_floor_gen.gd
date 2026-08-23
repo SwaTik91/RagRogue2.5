@@ -9,6 +9,7 @@ const CATALOG_IDS := [
 	"act_boss",
 ]
 const DROPS_PACK := ["drops", "drops", "drops"]
+const ANGEL_BOSS := ["angel_mvp"]
 const PLACEHOLDERS := ["mob_a", "boss_act1"]
 
 
@@ -78,8 +79,10 @@ func _test_monster_ids_match_catalog(errors: Array) -> void:
 						errors.append("COMBAT room should spawn 3 drops, got %s" % str(ids))
 						return
 				if room.get("type") == RoomType.Value.BOSS:
-					if ids != DROPS_PACK:
-						errors.append("BOSS room should spawn 3 drops, got %s" % str(ids))
+					if ids != ANGEL_BOSS:
+						errors.append("BOSS room should spawn angel_mvp, got %s" % str(ids))
 						return
 	if not seen.has("drops"):
 		errors.append("FloorGen should emit drops")
+	if not seen.has("angel_mvp"):
+		errors.append("FloorGen should emit angel_mvp on boss floor")

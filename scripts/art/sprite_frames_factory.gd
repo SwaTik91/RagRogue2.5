@@ -15,7 +15,16 @@ const MONSTER_ACTOR := {
 	"cave_slime": "cave_slime",
 	"stone_beetle": "stone_beetle",
 	"act_boss": "vault_warden",
+	"lunatic": "lunatic",
+	"drops": "drops",
+	"angel_mvp": "angel_mvp",
 }
+
+const MOBS_WITH_SKILL := [
+	"lunatic",
+	"drops",
+	"angel_mvp",
+]
 
 const ANIM_SPEEDS := {
 	"idle": 6.0,
@@ -41,7 +50,7 @@ static func _actor_frames(actor: String, is_hero: bool) -> SpriteFrames:
 	if _cache.has(key):
 		return _cache[key] as SpriteFrames
 	var anims := ["idle", "walk", "attack"]
-	if is_hero:
+	if is_hero or actor in MOBS_WITH_SKILL:
 		anims.append("skill")
 	var frames := SpriteFrames.new()
 	var any := false

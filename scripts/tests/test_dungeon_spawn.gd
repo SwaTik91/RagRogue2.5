@@ -42,11 +42,11 @@ func _test_spawn_plan_from_ids(errors: Array) -> void:
 		errors.append("DungeonController.current_room_monster_ids should exist")
 		controller.free()
 		return
-	var plan: Array = controller.spawn_plan(["cave_slime", "stone_beetle", "act_boss"])
+	var plan: Array = controller.spawn_plan(["drops", "drops", "drops"])
 	if plan.size() != 3:
-		errors.append("spawn_plan should resolve 3 catalog ids, got %s" % plan.size())
-	elif str(plan[0].get("id", "")) != "cave_slime" or int(plan[0].get("hp", 0)) != 20:
-		errors.append("first spawn should be cave_slime hp 20")
+		errors.append("spawn_plan should resolve 3 drops, got %s" % plan.size())
+	elif str(plan[0].get("id", "")) != "drops" or int(plan[0].get("hp", 0)) != 32:
+		errors.append("first spawn should be drops hp 32")
 	var run := RunState.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
@@ -55,8 +55,8 @@ func _test_spawn_plan_from_ids(errors: Array) -> void:
 	for mid in room_ids:
 		if str(mid) in ["mob_a", "boss_act1"]:
 			errors.append("current room should not use placeholder id %s" % mid)
-	var unknown: Array = controller.spawn_plan(["no_such_mob", "cave_slime"])
-	if unknown.size() != 1 or str(unknown[0].get("id", "")) != "cave_slime":
+	var unknown: Array = controller.spawn_plan(["no_such_mob", "drops"])
+	if unknown.size() != 1 or str(unknown[0].get("id", "")) != "drops":
 		errors.append("spawn_plan should skip unknown ids")
 	controller.free()
 

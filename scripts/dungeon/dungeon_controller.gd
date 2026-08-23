@@ -237,6 +237,8 @@ func _make_enemy(def: Dictionary, index: int, count: int) -> Node:
 
 
 func _pack_position(index: int, count: int) -> Vector2:
+	if count == 1:
+		return Vector2(185, 35)
 	var offsets: Array = [
 		Vector2(130, -70),
 		Vector2(165, 25),
@@ -270,7 +272,7 @@ func _clear_enemies() -> void:
 func _refresh_hp_label() -> void:
 	if _hp_label == null or _player == null or not is_instance_valid(_player):
 		return
-	_hp_label.text = "HP %d/%d  v0.1.29" % [maxi(0, int(_player.hp)), int(_player.hp_max)]
+	_hp_label.text = "HP %d/%d  v0.1.30" % [maxi(0, int(_player.hp)), int(_player.hp_max)]
 
 
 func _load_monster_table() -> Dictionary:

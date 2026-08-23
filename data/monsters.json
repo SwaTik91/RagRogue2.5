@@ -1,5 +1,63 @@
 [
-  {"id": "cave_slime", "name": "Cave Slime", "tier": 1, "hp": 20, "atk": 3, "def": 0},
-  {"id": "stone_beetle", "name": "Stone Beetle", "tier": 2, "hp": 35, "atk": 5, "def": 2},
-  {"id": "act_boss", "name": "Vault Warden", "tier": 5, "hp": 120, "atk": 8, "def": 3}
+  {
+    "id": "drops",
+    "name": "Drops",
+    "tier": 2,
+    "hp": 32,
+    "atk": 5,
+    "def": 1,
+    "attack_range": 220,
+    "skills": [
+      {
+        "id": "apple_spit",
+        "cooldown": 2.0,
+        "damage_mult": 1.1,
+        "projectile": "apple",
+        "speed": 300
+      }
+    ]
+  },
+  {
+    "id": "angel_mvp",
+    "name": "Angeling",
+    "tier": 5,
+    "hp": 280,
+    "atk": 13,
+    "def": 6,
+    "attack_range": 280,
+    "is_boss": true,
+    "skills": [
+      {
+        "id": "shadow_mend",
+        "cooldown": 11.0,
+        "kind": "heal_self",
+        "heal": 55
+      },
+      {
+        "id": "flame_earth",
+        "cooldown": 2.5,
+        "damage_mult": 1.15,
+        "projectile": "flame",
+        "speed": 340
+      },
+      {
+        "id": "scorched_earth",
+        "cooldown": 8.5,
+        "kind": "ground_burn",
+        "radius": 300,
+        "patch_count": 11,
+        "patch_radius": 46,
+        "duration": 5.5,
+        "tick_interval": 0.42,
+        "damage_mult": 0.38
+      },
+      {
+        "id": "crystal_volley",
+        "cooldown": 6.0,
+        "kind": "aoe_player",
+        "radius": 130,
+        "damage_mult": 1.35
+      }
+    ]
+  }
 ]

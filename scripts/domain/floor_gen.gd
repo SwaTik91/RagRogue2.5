@@ -13,7 +13,7 @@ static func make_floor(floor_index: int, rng: RandomNumberGenerator, short_act: 
 	if short_act:
 		return [
 			_room(RoomType.Value.COMBAT, DROPS_PACK.duplicate()),
-			_room(RoomType.Value.BOSS, DROPS_PACK.duplicate()),
+			_room(RoomType.Value.BOSS, ["angel_mvp"]),
 		]
 	var rooms: Array = []
 	var combat_count := 2 + rng.randi_range(1, 2)
@@ -24,7 +24,7 @@ static func make_floor(floor_index: int, rng: RandomNumberGenerator, short_act: 
 	rooms.append(_room(RoomType.Value.LOOT, []))
 	_shuffle(rooms, rng)
 	if floor_index == act_floor_count(short_act) - 1:
-		rooms.append(_room(RoomType.Value.BOSS, DROPS_PACK.duplicate()))
+		rooms.append(_room(RoomType.Value.BOSS, ["angel_mvp"]))
 	return rooms
 
 

@@ -63,7 +63,7 @@ func _test_skips_consecutive_empty_loot_and_event(errors: Array) -> void:
 	run.rooms = [
 		{"type": RoomType.Value.LOOT, "monster_ids": [], "cleared": false},
 		{"type": RoomType.Value.EVENT, "monster_ids": [], "cleared": false},
-		{"type": RoomType.Value.COMBAT, "monster_ids": ["cave_slime", "stone_beetle"], "cleared": false}
+		{"type": RoomType.Value.COMBAT, "monster_ids": ["drops", "drops", "drops"], "cleared": false}
 	]
 	run.room_index = 0
 	run.floor_index = 0
@@ -71,6 +71,6 @@ func _test_skips_consecutive_empty_loot_and_event(errors: Array) -> void:
 	var ids: Array = controller.current_room_monster_ids(run)
 	if run.room_index != 2:
 		errors.append("should skip empty LOOT+EVENT to the combat pack, room_index=%s" % run.room_index)
-	if ids != ["cave_slime", "stone_beetle"]:
-		errors.append("current room should be the combat pack, got %s" % str(ids))
+	if ids != ["drops", "drops", "drops"]:
+		errors.append("current room should be the drops pack, got %s" % str(ids))
 	controller.free()

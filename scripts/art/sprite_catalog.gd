@@ -25,6 +25,9 @@ const MONSTER_PATHS := {
 	"cave_slime": "res://assets/art/game/cave-slime.png",
 	"stone_beetle": "res://assets/art/game/stone-beetle.png",
 	"act_boss": "res://assets/art/game/vault-warden.png",
+	"lunatic": "res://assets/art/game/lunatic.png",
+	"drops": "res://assets/art/game/drops.png",
+	"angel_mvp": "res://assets/art/game/angel-mvp.png",
 }
 
 
@@ -78,10 +81,14 @@ static func fit_sprite(sprite: Sprite2D, texture: Texture2D, target_height: floa
 
 
 static func target_height_for_monster(monster_id: String) -> float:
+	if monster_id == "angel_mvp":
+		return BOSS_TARGET_HEIGHT * 1.35
 	if monster_id == "act_boss":
 		return BOSS_TARGET_HEIGHT
 	if monster_id == "cave_slime":
 		return SLIME_TARGET_HEIGHT
+	if monster_id == "drops":
+		return ENEMY_TARGET_HEIGHT * 0.92
 	return ENEMY_TARGET_HEIGHT
 
 

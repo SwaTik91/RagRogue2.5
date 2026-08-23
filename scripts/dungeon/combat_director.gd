@@ -19,6 +19,10 @@ var _archer_impact_queue: Array = []
 var _mob_player_impact_queue: Array = []
 
 
+func _ready() -> void:
+	add_to_group(&"combat_director")
+
+
 func attack_range_for_class(class_id: int) -> float:
 	if class_id == ClassId.Value.SWORDMAN:
 		return MELEE_RANGE
@@ -117,6 +121,39 @@ func enemy_act(enemy: Dictionary, player_state: Dictionary, cds: Dictionary) -> 
 					"skill_id": sid,
 					"heal": heal_amt,
 					"kind": "heal_self",
+				}
+			if str(skill.get("kind", "")) == "ground_burn":
+				var burn_mult := float(skill.get("damage_mult", 0.4))
+				var tick_dmg := AutoCombat.basic_damage(
+					int(round(float(enemy.get("atk", 1)) * burn_mult)),
+					int(player_state.get("def", 0))
+				)
+				return {
+					"applied": true,
+					"skill_id": sid,
+					"kind": "ground_burn",
+					"deferred": true,
+					"radius": float(skill.get("radius", 300.0)),
+					"patch_count": int(skill.get("patch_count", 10)),
+					"patch_radius": float(skill.get("patch_radius", 44.0)),
+					"duration": float(skill.get("duration", 5.0)),
+					"tick_interval": float(skill.get("tick_interval", 0.45)),
+					"tick_damage": tick_dmg,
+				}
+			if str(skill.get("kind", "")) == "aoe_player":
+				var aoe_r := float(skill.get("radius", 120.0))
+				var aoe_mult := float(skill.get("damage_mult", 1.3))
+				var aoe_dmg := AutoCombat.basic_damage(
+					int(round(float(enemy.get("atk", 1)) * aoe_mult)),
+					int(player_state.get("def", 0))
+				)
+				player_state.hp = maxf(0.0, float(player_state.hp) - float(aoe_dmg))
+				return {
+					"applied": true,
+					"skill_id": sid,
+					"kind": "aoe_player",
+					"damage": aoe_dmg,
+					"radius": aoe_r,
 				}
 			var mult := float(skill.get("damage_mult", 1.0))
 			var raw_atk := int(round(float(enemy.get("atk", 1)) * mult))
@@ -334,6 +371,19 @@ func _play_combat_events(events: Array) -> void:
 					var heal_amt := int(ev.get("heal", 0))
 					if heal_amt > 0 and node != null and is_instance_valid(node):
 						_spawn_float(PlaneCoords.from_node(node), "+%d" % heal_amt, Color(0.45, 1.0, 0.55))
+						if node.has_method("get_mob_vfx"):
+							var vfx: MobVfx = node.get_mob_vfx()
+							if vfx != null:
+								vfx.play_heal_flash(PlaneCoords.from_node(node))
+				elif str(ev.get("kind", "")) == "ground_burn" and ev.get("deferred", false):
+					_queue_ground_burn(ev, idx)
+				elif str(ev.get("kind", "")) == "aoe_player":
+					var aoe_r := float(ev.get("radius", 120.0))
+					if player != null and is_instance_valid(player):
+						if node != null and node.has_method("get_mob_vfx"):
+							var vfx_a: MobVfx = node.get_mob_vfx()
+							if vfx_a != null:
+								vfx_a.play_aoe_flash(PlaneCoords.from_node(player), aoe_r)
 				elif str(ev.get("kind", "")) == "projectile" and ev.get("deferred", false):
 					_queue_mob_projectile(ev, idx)
 
@@ -556,6 +606,39 @@ func _queue_mob_projectile(ev: Dictionary, enemy_index: int) -> void:
 	var from := PlaneCoords.from_node(node) + Vector2(0, -10)
 	var captured: Dictionary = ev.duplicate()
 	vfx.play_skill(sid, skill, from, player as Node2D, func(): _apply_mob_player_impact(captured))
+
+
+func apply_player_dot(damage: int) -> void:
+	if player == null or not is_instance_valid(player) or damage <= 0:
+		return
+	player.hp = maxf(0.0, float(player.hp) - float(damage))
+	_spawn_float(PlaneCoords.from_node(player), "-%d" % damage, Color(1.0, 0.55, 0.25))
+	if player.has_method("play_hit_anim"):
+		player.play_hit_anim()
+
+
+func _queue_ground_burn(ev: Dictionary, enemy_index: int) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	if enemy_index < 0 or enemy_index >= enemies.size():
+		return
+	var node = enemies[enemy_index]
+	if node == null or not is_instance_valid(node) or not node.has_method("get_mob_vfx"):
+		return
+	var vfx: MobVfx = node.get_mob_vfx()
+	if vfx == null:
+		return
+	var skills: Array = node.skills if "skills" in node else []
+	var skill: Dictionary = {}
+	var sid := str(ev.get("skill_id", ""))
+	for item in skills:
+		if item is Dictionary and str(item.get("id", "")) == sid:
+			skill = item.duplicate()
+			break
+	if skill.is_empty():
+		skill = ev.duplicate()
+	skill["tick_damage"] = int(ev.get("tick_damage", 4))
+	vfx.play_ground_burn(sid, skill, player as Node2D)
 
 
 func _apply_mob_player_impact(ev: Dictionary) -> void:

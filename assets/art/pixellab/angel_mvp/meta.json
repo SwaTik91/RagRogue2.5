@@ -1,0 +1,8 @@
+{
+  "source": "mannequin_state_zip",
+  "character_id": "498da150-1e5c-48af-81be-6d140b331a06",
+  "actor": "angel_mvp",
+  "state_folder": "Idle",
+  "imported_frames": 0,
+  "procedural_anims": "walk/attack/skill derived from idle via scripts/art/procedural_mob_anims.py"
+}

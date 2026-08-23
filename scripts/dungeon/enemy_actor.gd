@@ -36,7 +36,7 @@ func bind_monster(def: Dictionary) -> void:
 	skills = def.get("skills", []) if def.get("skills") is Array else []
 	cds.clear()
 	if is_boss:
-		move_speed = 65.0
+		move_speed = 72.0
 	_sync_mob_vfx()
 	_apply_look()
 	refresh_alive()
@@ -52,7 +52,12 @@ func get_mob_vfx() -> MobVfx:
 
 
 func play_combat_anim(skill_id: String = "") -> void:
-	_animator.play_attack(skill_id != "")
+	var is_skill := skill_id != ""
+	if skill_id in ["shadow_mend", "scorched_earth", "crystal_volley"]:
+		is_skill = true
+	elif skill_id == "flame_earth":
+		is_skill = false
+	_animator.play_attack(is_skill)
 
 
 func play_hit_anim() -> void:
@@ -157,7 +162,7 @@ func _apply_look() -> void:
 			body.color = Color(0.55, 0.38, 0.22, 1)
 			scale = Vector2(1.05, 1.05)
 		"angel_mvp", "act_boss":
-			body.color = Color(0.95, 0.92, 0.75, 1)
+			body.color = Color(0.62, 0.38, 0.78, 1)
 			scale = Vector2(1.85, 1.85)
 		"lunatic":
 			body.color = Color(0.82, 0.45, 0.28, 1)
