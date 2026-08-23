@@ -30,6 +30,11 @@ func face_plane_direction(dir: Vector2) -> void:
 		_active.face_plane_direction(dir)
 
 
+func update_motion(plane_velocity: Vector2) -> void:
+	if _active != null and _active.has_method("update_motion"):
+		_active.update_motion(plane_velocity)
+
+
 func play_hit_flash() -> void:
 	if _active != null and _active.has_method("play_hit_flash"):
 		_active.play_hit_flash()

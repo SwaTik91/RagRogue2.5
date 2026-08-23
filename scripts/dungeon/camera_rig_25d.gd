@@ -4,8 +4,8 @@ extends Node3D
 @export var target_path: NodePath
 @export var follow_height := 520.0
 @export var follow_distance := 480.0
-@export var tilt_degrees := 54.0
-@export var ortho_size := 420.0
+@export var tilt_degrees := 68.0
+@export var ortho_size := 400.0
 @export var look_at_height := 36.0
 @export var smoothing := 8.0
 
