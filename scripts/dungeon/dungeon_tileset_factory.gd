@@ -34,6 +34,7 @@ static var atlas_rock := ATLAS_ROCK
 static var atlas_barrel := ATLAS_BARREL
 static var atlas_wall := ATLAS_WALL
 static var grass_variants_runtime: Array[Vector2i] = GRASS_VARIANTS.duplicate()
+static var using_pixellab := false
 
 
 static func grass_variants() -> Array[Vector2i]:
@@ -57,6 +58,7 @@ static func _load_pixellab_meta() -> Dictionary:
 
 
 static func _make_pixellab_tileset() -> TileSet:
+	using_pixellab = true
 	var meta := _load_pixellab_meta()
 	var atlas_tex := load(PIXELLAB_ATLAS) as Texture2D
 	if atlas_tex == null:
@@ -179,6 +181,7 @@ static func _is_pure_lower(corners: Dictionary) -> bool:
 
 
 static func _make_procedural_tileset() -> TileSet:
+	using_pixellab = false
 	atlas_tree = ATLAS_TREE
 	atlas_rock = ATLAS_ROCK
 	atlas_barrel = ATLAS_BARREL

@@ -25,11 +25,9 @@ static func build(parent: Node2D) -> void:
 	parent.add_child(root)
 	parent.move_child(root, 0)
 	var tile_set := DungeonTilesetFactory.make_tileset()
-	var floor_layer := _make_layer(root, "Floor", -20, tile_set)
-	var path_layer := _make_layer(root, "Paths", -15, tile_set)
+	var ground_layer := _make_layer(root, "Ground", -20, tile_set)
 	var decor_layer := _make_layer(root, "Decor", -8, tile_set)
-	_fill_grass(floor_layer)
-	_paint_paths(path_layer)
+	_paint_ground(ground_layer)
 	_paint_decor(decor_layer)
 	_paint_wall_trim(parent, tile_set)
 	_add_atmosphere(parent)
@@ -44,30 +42,32 @@ static func _make_layer(root: Node2D, layer_name: String, z: int, tile_set: Tile
 	return layer
 
 
-static func _fill_grass(layer: TileMapLayer) -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 90210
-	var grass_cells: Array[Vector2i] = []
+static func _paint_ground(layer: TileMapLayer) -> void:
+	var ground_cells: Array[Vector2i] = []
 	for y in MAP_ROWS:
 		for x in MAP_COLS:
-			grass_cells.append(ORIGIN_CELL + Vector2i(x, y))
+			ground_cells.append(ORIGIN_CELL + Vector2i(x, y))
 	layer.set_cells_terrain_connect(
-		grass_cells,
+		ground_cells,
 		DungeonTilesetFactory.TERRAIN_SET,
 		DungeonTilesetFactory.TERRAIN_GRASS,
 		false
 	)
-	# Subtle grass variation on top of terrain fill.
-	for cell in grass_cells:
-		if rng.randf() > 0.35:
-			continue
-		var variant := DungeonTilesetFactory.grass_variants()[
-			rng.randi_range(0, DungeonTilesetFactory.grass_variants().size() - 1)
-		]
-		layer.set_cell(cell, DungeonTilesetFactory.SOURCE_ID, variant)
+	var path_cells := _path_cells()
+	if path_cells.is_empty():
+		return
+	# Wang corners need grass + path on the same layer so neighbors blend correctly.
+	layer.set_cells_terrain_connect(
+		path_cells,
+		DungeonTilesetFactory.TERRAIN_SET,
+		DungeonTilesetFactory.TERRAIN_PATH,
+		false
+	)
+	if not DungeonTilesetFactory.using_pixellab:
+		_sprinkle_grass_variants(layer, ground_cells)
 
 
-static func _paint_paths(layer: TileMapLayer) -> void:
+static func _path_cells() -> Array[Vector2i]:
 	var path_cells: Array[Vector2i] = []
 	var mid_x := ORIGIN_CELL.x + MAP_COLS / 2
 	var mid_y := ORIGIN_CELL.y + MAP_ROWS / 2
@@ -79,14 +79,23 @@ static func _paint_paths(layer: TileMapLayer) -> void:
 	for y in range(ORIGIN_CELL.y, ORIGIN_CELL.y + MAP_ROWS):
 		if abs(y - mid_y) <= half_h:
 			path_cells.append(Vector2i(mid_x, y))
-	if path_cells.is_empty():
-		return
-	layer.set_cells_terrain_connect(
-		path_cells,
-		DungeonTilesetFactory.TERRAIN_SET,
-		DungeonTilesetFactory.TERRAIN_PATH,
-		false
-	)
+	return path_cells
+
+
+static func _sprinkle_grass_variants(layer: TileMapLayer, ground_cells: Array[Vector2i]) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 90210
+	var path_set := {}
+	for cell in _path_cells():
+		path_set[cell] = true
+	var variants := DungeonTilesetFactory.grass_variants()
+	for cell in ground_cells:
+		if path_set.has(cell):
+			continue
+		if rng.randf() > 0.35:
+			continue
+		var variant := variants[rng.randi_range(0, variants.size() - 1)]
+		layer.set_cell(cell, DungeonTilesetFactory.SOURCE_ID, variant)
 
 
 static func _paint_decor(layer: TileMapLayer) -> void:

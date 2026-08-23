@@ -11,8 +11,8 @@
       "id": "13",
       "name": "wang_13",
       "atlas": [
-        2,
-        0
+        1,
+        3
       ],
       "corners": {
         "NW": "upper",
@@ -25,7 +25,7 @@
       "id": "10",
       "name": "wang_10",
       "atlas": [
-        1,
+        2,
         2
       ],
       "corners": {
@@ -39,8 +39,8 @@
       "id": "4",
       "name": "wang_4",
       "atlas": [
-        1,
-        0
+        0,
+        1
       ],
       "corners": {
         "NW": "lower",
@@ -53,7 +53,7 @@
       "id": "12",
       "name": "wang_12",
       "atlas": [
-        3,
+        0,
         3
       ],
       "corners": {
@@ -81,8 +81,8 @@
       "id": "8",
       "name": "wang_8",
       "atlas": [
-        1,
-        3
+        0,
+        2
       ],
       "corners": {
         "NW": "upper",
@@ -95,8 +95,8 @@
       "id": "0",
       "name": "wang_0",
       "atlas": [
-        3,
-        1
+        0,
+        0
       ],
       "corners": {
         "NW": "lower",
@@ -110,7 +110,7 @@
       "name": "wang_1",
       "atlas": [
         1,
-        1
+        0
       ],
       "corners": {
         "NW": "lower",
@@ -137,8 +137,8 @@
       "id": "3",
       "name": "wang_3",
       "atlas": [
-        2,
-        1
+        3,
+        0
       ],
       "corners": {
         "NW": "lower",
@@ -151,8 +151,8 @@
       "id": "2",
       "name": "wang_2",
       "atlas": [
-        3,
-        1
+        2,
+        0
       ],
       "corners": {
         "NW": "lower",
@@ -166,7 +166,7 @@
       "name": "wang_5",
       "atlas": [
         1,
-        2
+        1
       ],
       "corners": {
         "NW": "lower",
@@ -179,8 +179,8 @@
       "id": "15",
       "name": "wang_15",
       "atlas": [
-        2,
-        2
+        3,
+        3
       ],
       "corners": {
         "NW": "upper",
@@ -193,7 +193,7 @@
       "id": "14",
       "name": "wang_14",
       "atlas": [
-        1,
+        2,
         3
       ],
       "corners": {
@@ -207,8 +207,8 @@
       "id": "9",
       "name": "wang_9",
       "atlas": [
-        2,
-        3
+        1,
+        2
       ],
       "corners": {
         "NW": "upper",
@@ -222,7 +222,7 @@
       "name": "wang_7",
       "atlas": [
         3,
-        2
+        1
       ],
       "corners": {
         "NW": "lower",

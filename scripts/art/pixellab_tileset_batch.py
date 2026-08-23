@@ -245,13 +245,10 @@ def export_tileset(tileset_id: str) -> dict:
 	os.makedirs(TILES_DIR, exist_ok=True)
 	exported = []
 	for tile in tiles:
-		pos = tile.get("original_position") or {}
-		col = int(pos.get("col", len(exported) % 4))
-		row = int(pos.get("row", len(exported) // 4))
-		if col > 3:
-			col = len(exported) % 4
-		if row > 3:
-			row = len(exported) // 4
+		# PixelLab original_position can collide — Wang ids 0–15 map to a unique 4×4 grid.
+		tid = int(tile.get("id", len(exported)))
+		col = tid % 4
+		row = tid // 4
 		raw = tile_image_bytes(tile)
 		tile_path = f"{TILES_DIR}/{tile['id']}.png"
 		with open(tile_path, "wb") as f:
