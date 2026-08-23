@@ -1,8 +1,8 @@
-extends Node3D
+extends Node2D
 
 var _director: Node = null
 var _player: Node = null
-var _enemies_root: Node3D = null
+var _enemies_root: Node2D = null
 var _monster_table: Dictionary = {}
 var _hp_label: Label = null
 var _banner: Label = null
@@ -10,17 +10,21 @@ var _upgrade_modal: Node = null
 
 
 func _ready() -> void:
-	DungeonMapBuilder3D.build(get_node_or_null("World") as Node3D)
+	RoMapBuilder.build(self)
 	_monster_table = _load_monster_table()
 	_player = get_node_or_null("Player")
 	_director = get_node_or_null("CombatDirector")
-	_enemies_root = get_node_or_null("Enemies") as Node3D
+	_enemies_root = get_node_or_null("Enemies") as Node2D
 	if _enemies_root == null:
-		_enemies_root = Node3D.new()
+		_enemies_root = Node2D.new()
 		_enemies_root.name = "Enemies"
 		add_child(_enemies_root)
-	_hp_label = get_node_or_null("HUD/HpLabel") as Label
-	_banner = get_node_or_null("HUD/BannerLabel") as Label
+	_hp_label = get_node_or_null("HUD/SafeArea/HpLabel") as Label
+	if _hp_label == null:
+		_hp_label = get_node_or_null("HUD/HpLabel") as Label
+	_banner = get_node_or_null("HUD/SafeArea/BannerLabel") as Label
+	if _banner == null:
+		_banner = get_node_or_null("HUD/BannerLabel") as Label
 	spawn_current_room()
 
 
@@ -219,15 +223,16 @@ func spawn_plan_positions(count: int) -> Array:
 
 
 func _make_enemy(def: Dictionary, index: int, count: int) -> Node:
-	var packed: PackedScene = load("res://scenes/dungeon/enemy_3d.tscn")
+	var packed: PackedScene = load("res://scenes/dungeon/enemy.tscn")
 	var enemy: Node
 	if packed != null:
 		enemy = packed.instantiate()
 	else:
-		enemy = load("res://scripts/dungeon/enemy_actor_3d.gd").new()
+		enemy = load("res://scripts/dungeon/enemy_actor.gd").new()
 	if enemy.has_method("bind_monster"):
 		enemy.bind_monster(def)
-	PlaneCoords.set_node_plane(enemy, _pack_position(index, count))
+	if enemy is Node2D:
+		(enemy as Node2D).position = _pack_position(index, count)
 	return enemy
 
 
@@ -259,7 +264,7 @@ func _clear_enemies() -> void:
 func _refresh_hp_label() -> void:
 	if _hp_label == null or _player == null or not is_instance_valid(_player):
 		return
-	_hp_label.text = "HP %d/%d  v0.1.17" % [maxi(0, int(_player.hp)), int(_player.hp_max)]
+	_hp_label.text = "HP %d/%d  v0.1.18" % [maxi(0, int(_player.hp)), int(_player.hp_max)]
 
 
 func _load_monster_table() -> Dictionary:

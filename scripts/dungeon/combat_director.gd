@@ -317,13 +317,15 @@ func _spawn_float(plane_pos: Vector2, text: String, color: Color) -> void:
 
 
 func _plane_to_screen(plane: Vector2) -> Vector2:
-	var cam := get_viewport().get_camera_3d()
-	if cam == null:
-		return plane
-	var world := PlaneCoords.to_vector3(plane, 48.0)
-	if not cam.is_position_in_frustum(world):
-		return plane
-	return cam.unproject_position(world)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null:
+		return cam.get_screen_center() + (plane - cam.global_position)
+	var cam3d := get_viewport().get_camera_3d()
+	if cam3d != null:
+		var world := PlaneCoords.to_vector3(plane, 48.0)
+		if cam3d.is_position_in_frustum(world):
+			return cam3d.unproject_position(world)
+	return plane
 
 
 func _handle_defeat() -> void:

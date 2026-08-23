@@ -1,31 +1,41 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/dungeon/dungeon_controller.gd" id="1_dc"]
-[ext_resource type="PackedScene" path="res://scenes/dungeon/player_3d.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/dungeon/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/virtual_stick.tscn" id="2_stick"]
 [ext_resource type="Script" path="res://scripts/dungeon/combat_director.gd" id="3_cd"]
 [ext_resource type="Script" path="res://scripts/ui/ui_safe_area_margins.gd" id="4_safe"]
-[ext_resource type="Script" path="res://scripts/dungeon/camera_rig_25d.gd" id="5_cam"]
 
-[node name="Dungeon" type="Node3D"]
+[sub_resource type="RectangleShape2D" id="WallH"]
+size = Vector2(4080, 80)
+
+[sub_resource type="RectangleShape2D" id="WallV"]
+size = Vector2(80, 2640)
+
+[node name="Dungeon" type="Node2D"]
 script = ExtResource("1_dc")
 
-[node name="World" type="Node3D" parent="."]
+[node name="Walls" type="StaticBody2D" parent="."]
 
-[node name="Enemies" type="Node3D" parent="."]
+[node name="North" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, -1280)
+shape = SubResource("WallH")
+
+[node name="South" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, 1280)
+shape = SubResource("WallH")
+
+[node name="West" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-2000, 0)
+shape = SubResource("WallV")
+
+[node name="East" type="CollisionShape2D" parent="Walls"]
+position = Vector2(2000, 0)
+shape = SubResource("WallV")
+
+[node name="Enemies" type="Node2D" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-
-[node name="CameraRig25D" type="Node3D" parent="."]
-script = ExtResource("5_cam")
-target_path = NodePath("../Player")
-tilt_degrees = 58.0
-orbit_distance = 380.0
-ortho_size = 250.0
-look_at_height = 40.0
-smoothing = 16.0
-
-[node name="Camera3D" type="Camera3D" parent="CameraRig25D"]
 
 [node name="CombatDirector" type="Node" parent="."]
 script = ExtResource("3_cd")
@@ -48,7 +58,7 @@ offset_top = 16.0
 offset_right = 320.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 22
-text = "HP --/--  v0.1.17"
+text = "HP --/--  v0.1.18"
 
 [node name="BannerLabel" type="Label" parent="HUD/SafeArea"]
 layout_mode = 2
