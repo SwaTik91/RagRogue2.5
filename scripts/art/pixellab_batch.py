@@ -84,6 +84,9 @@ ACTOR_PROMPTS = {
 }
 
 MOB_IMAGE_SIZE = {
+	"archer": (128, 128),
+	"swordman": (128, 128),
+	"mage": (128, 128),
 	"lunatic": (96, 96),
 	"drops": (128, 128),
 	"angel_mvp": (128, 128),
@@ -172,7 +175,7 @@ ANIM_JOBS = [
 		"id": "attack",
 		"mode": "v3",
 		"action_description": (
-			"archer draws bowstring back to cheek with right hand, holds tension, "
+			"sniper archer draws bowstring back with right hand, falcon wings spread behind, "
 			"releases arrow forward, clear bow draw and follow-through, left hand holds bow"
 		),
 		"frame_count": 8,
@@ -181,7 +184,8 @@ ANIM_JOBS = [
 		"id": "skill",
 		"mode": "v3",
 		"action_description": (
-			"archer raises bow overhead and fires volley upward, dramatic special attack pose"
+			"sniper raises bow overhead while falcon swoops, dramatic volley special attack, "
+			"hooded cloak flows, top-down roguelike hero skill cast"
 		),
 		"frame_count": 8,
 	},
@@ -664,6 +668,11 @@ def import_by_tag(tag: str, actor: str, generate_anims: bool = False) -> None:
 		raise RuntimeError(f"no completed character with tag {tag!r}")
 	print(f"import tag {tag} → {actor} ({cid})", flush=True)
 	import_mannequin_state_zip(cid, actor)
+	meta_path = f"{META_ROOT}/{actor}/meta.json"
+	meta = json.load(open(meta_path)) if os.path.isfile(meta_path) else {}
+	meta["character_id"] = cid
+	meta["pixellab_tag"] = tag
+	json.dump(meta, open(meta_path, "w"), indent=2)
 	write_preview_sheet(actor)
 	if generate_anims:
 		print("generating walk/attack/skill via PixelLab API...", flush=True)
@@ -833,6 +842,10 @@ def rotate_south_anims(actor: str, anims: tuple[str, ...] = ROTATE_ANIM_NAMES, f
 				continue
 			out_dir = f"{ANIM_ROOT}/{actor}/{game_dir}/{anim_name}"
 			os.makedirs(out_dir, exist_ok=True)
+			valid_names = set(frame_files)
+			for old in os.listdir(out_dir):
+				if old.startswith("frame_") and old.endswith(".png") and old not in valid_names:
+					os.remove(os.path.join(out_dir, old))
 			for fname in frame_files:
 				src = os.path.join(south_dir, fname)
 				dest = os.path.join(out_dir, fname)
@@ -994,6 +1007,7 @@ def _copy_idle_portrait(actor: str) -> None:
 		"angel_mvp": "angel-mvp.png",
 		"lunatic": "lunatic.png",
 		"drops": "drops.png",
+		"archer": "archer-idle.png",
 	}
 	dst_name = name_map.get(actor, f"{actor}.png")
 	dst = f"{GAME_ART}/{dst_name}"
