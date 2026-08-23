@@ -4,7 +4,7 @@ extends Node3D
 
 @export var target_path: NodePath
 @export var orbit_distance := 380.0
-@export var tilt_degrees := 58.0
+@export var tilt_degrees := 80.0
 @export var ortho_size := 300.0
 @export var look_at_height := 42.0
 @export var smoothing := 8.0
@@ -31,7 +31,7 @@ func _physics_process(delta: float) -> void:
 	if _target == null or not is_instance_valid(_target):
 		return
 	var focus := _target.global_position + Vector3(0.0, look_at_height, 0.0)
-	var elev := deg_to_rad(clampf(tilt_degrees, 18.0, 72.0))
+	var elev := deg_to_rad(clampf(tilt_degrees, 18.0, 85.0))
 	var back := orbit_distance * cos(elev)
 	var up := orbit_distance * sin(elev)
 	var desired := focus + Vector3(0.0, up, back)

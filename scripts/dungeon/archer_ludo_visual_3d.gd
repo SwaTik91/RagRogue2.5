@@ -13,7 +13,6 @@ const ANIM_PATHS: Dictionary = {
 
 const LOOP_ANIMS: Array[StringName] = [&"idle", &"walk"]
 const LIB_NAME := &""
-const MIRROR_MODEL_X := true
 
 var _model_root: Node3D = null
 var _skeleton: Skeleton3D = null
@@ -73,8 +72,6 @@ func _spawn_model() -> void:
 	add_child(_model_root)
 	_skeleton = _find_skeleton(_model_root)
 	_fit_model_scale()
-	if MIRROR_MODEL_X:
-		_model_root.scale.x *= -1.0
 
 
 func _setup_animation_player() -> void:
