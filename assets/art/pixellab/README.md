@@ -15,7 +15,8 @@ A bad `create-character` poisons every follow-up animation.
 1. **Idle only** (4 directions) — review in Godot or image viewer:
 
 ```bash
-python3 scripts/art/pixellab_batch.py lunatic --phase idle
+python3 scripts/art/pixellab_batch.py lunatic --phase idle-pixflux
+# south pixflux + rotate for up/left/right (avoids breathing-idle twins)
 # check assets/art/anim/lunatic/{down,up,left,right}/idle/
 ```
 

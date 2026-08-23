@@ -30,7 +30,8 @@ DIR_MAP = {
 	"east": "right",
 	"west": "left",
 }
-ALL_DIRS = list(DIR_MAP.keys())
+# PixelLab breathing-idle north frames stack two sprites — animate/export south only.
+ANIM_DIRECTIONS = ["south"]
 
 # Mannequin ZIP folders (web UI) → game animation names
 MANNEQUIN_ZIP_ANIM = {
@@ -84,7 +85,7 @@ ACTOR_PROMPTS = {
 
 MOB_IMAGE_SIZE = {
 	"lunatic": (96, 96),
-	"drops": (112, 112),
+	"drops": (128, 128),
 	"angel_mvp": (128, 128),
 }
 
@@ -247,6 +248,12 @@ def b64_image(path: str) -> dict:
 	return {"type": "base64", "base64": raw, "format": "png"}
 
 
+def _decode_b64(b64: str) -> bytes:
+	if "," in b64[:80]:
+		b64 = b64.split(",", 1)[1]
+	return base64.b64decode(b64)
+
+
 def create_character(actor: str, ref_image: str | None, force: bool = False) -> str:
 	meta_path = f"{META_ROOT}/{actor}/meta.json"
 	if not force and os.path.isfile(meta_path):
@@ -303,7 +310,7 @@ def request_animation(character_id: str, job: dict) -> list[str]:
 	body = {
 		"character_id": character_id,
 		"animation_name": job["id"],
-		"directions": ALL_DIRS,
+		"directions": ANIM_DIRECTIONS,
 		"async_mode": True,
 	}
 	if job.get("mode") == "template":
@@ -357,6 +364,8 @@ def export_frames_from_zip(actor: str, character_id: str, zdata: bytes) -> int:
 			game_anim = _map_anim_name(pl_anim)
 		if not game_anim:
 			continue
+		if pl_dir not in ANIM_DIRECTIONS:
+			continue
 		game_dir = DIR_MAP.get(pl_dir, pl_dir)
 		if not fname.startswith("frame_"):
 			continue
@@ -385,6 +394,8 @@ def export_frames(actor: str, character_id: str) -> None:
 					continue
 				for dir_entry in group.get("directions", []):
 					pl_dir = str(dir_entry.get("direction", ""))
+					if pl_dir not in ANIM_DIRECTIONS:
+						continue
 					game_dir = DIR_MAP.get(pl_dir, pl_dir)
 					frames = dir_entry.get("frames", [])
 					folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
@@ -410,7 +421,7 @@ def export_frames(actor: str, character_id: str) -> None:
 	with open(out_zip, "wb") as f:
 		f.write(zdata)
 	for game_dir in ("down", "up", "left", "right"):
-		for game_anim in ("idle", "walk", "attack", "skill"):
+		for game_anim in ("walk", "attack", "skill"):
 			folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
 			if os.path.isdir(folder):
 				for old in os.listdir(folder):
@@ -526,6 +537,98 @@ def anim_jobs_for(actor: str) -> list:
 	]
 
 
+def create_pixflux_image(description: str, width: int, height: int) -> bytes:
+	print(f"pixflux {width}x{height}...", flush=True)
+	resp = api(
+		"POST",
+		"/create-image-pixflux",
+		{
+			"description": description,
+			"image_size": {"width": width, "height": height},
+			"no_background": True,
+			"view": "low top-down",
+			"outline": "single color black outline",
+			"shading": "medium shading",
+			"detail": "medium detail",
+		},
+		timeout=180,
+	)
+	b64 = resp.get("image", {}).get("base64")
+	if not b64:
+		raise RuntimeError("pixflux returned no image")
+	return _decode_b64(b64)
+
+
+def rotate_from_south(
+	from_png: bytes,
+	to_direction: str,
+	width: int,
+	height: int,
+) -> bytes:
+	print(f"rotate south→{to_direction}...", flush=True)
+	resp = api(
+		"POST",
+		"/rotate",
+		{
+			"from_image": {
+				"type": "base64",
+				"base64": base64.b64encode(from_png).decode(),
+				"format": "png",
+			},
+			"image_size": {"width": width, "height": height},
+			"from_view": "low top-down",
+			"to_view": "low top-down",
+			"from_direction": "south",
+			"to_direction": to_direction,
+			"image_guidance_scale": 8.0,
+		},
+		timeout=180,
+	)
+	b64 = resp.get("image", {}).get("base64")
+	if not b64:
+		raise RuntimeError(f"rotate to {to_direction} returned no image")
+	return _decode_b64(b64)
+
+
+IDLE_ROTATE_DIRS = {
+	"down": None,
+	"up": "north",
+	"right": "east",
+	"left": "west",
+}
+
+
+def run_idle_pixflux(actor: str) -> None:
+	"""South pixflux still + rotate API for other dirs — avoids twin sprites."""
+	base = ACTOR_PROMPTS.get(actor, f"top-down roguelike {actor}")
+	w, h = MOB_IMAGE_SIZE.get(actor, (96, 96))
+	south_desc = (
+		f"{base}, front view facing south toward camera, "
+		"ONE single creature alone centered in frame, no duplicate, no pair"
+	)
+	south_png = create_pixflux_image(south_desc, w, h)
+	for game_dir, pl_dir in IDLE_ROTATE_DIRS.items():
+		if pl_dir is None:
+			raw = south_png
+		else:
+			raw = rotate_from_south(south_png, pl_dir, w, h)
+		folder = f"{ANIM_ROOT}/{actor}/{game_dir}/idle"
+		os.makedirs(folder, exist_ok=True)
+		dest = f"{folder}/frame_00.png"
+		with open(dest, "wb") as f:
+			f.write(raw)
+		for i in range(1, 4):
+			with open(f"{folder}/frame_{i:02d}.png", "wb") as out:
+				out.write(raw)
+		print(f"  idle/{game_dir}", flush=True)
+	_copy_idle_portrait(actor)
+	print(
+		f"IDLE PIXFLUX READY — review assets/art/anim/{actor}/ then "
+		f"python3 scripts/art/pixellab_batch.py {actor} --phase rest",
+		flush=True,
+	)
+
+
 def jobs_for_phase(actor: str, phase: str) -> list:
 	jobs = anim_jobs_for(actor)
 	if phase == "all":
@@ -534,10 +637,13 @@ def jobs_for_phase(actor: str, phase: str) -> list:
 		return [j for j in jobs if str(j.get("id", "")) != "idle"]
 	if phase in PHASE_ORDER:
 		return [j for j in jobs if str(j.get("id", "")) == phase]
-	raise SystemExit(f"unknown phase {phase!r}; use idle|walk|attack|skill|rest|all")
+	raise SystemExit(f"unknown phase {phase!r}; use idle|idle-pixflux|walk|attack|skill|rest|all")
 
 
 def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
+	if phase in ("idle", "idle-pixflux"):
+		run_idle_pixflux(actor)
+		return
 	ref = f"{GAME_ART}/{actor}-idle.png"
 	if not os.path.isfile(ref):
 		ref = None
@@ -545,9 +651,10 @@ def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	cid = None
 	if not force and os.path.isfile(meta_path):
 		cid = json.load(open(meta_path)).get("character_id")
-	needs_character = phase in ("all", "idle") and not cid
-	if needs_character:
-		cid = create_character(actor, ref, force=force)
+	needs_character = phase in ("all", "rest", "walk", "attack", "skill") and not cid
+	if needs_character or (force and phase == "rest"):
+		if force or not cid:
+			cid = create_character(actor, ref, force=force)
 	elif cid is None:
 		raise SystemExit(
 			f"no character_id in {meta_path}; run --phase idle first (or --force)"
@@ -560,12 +667,6 @@ def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	export_frames(actor, cid)
 	if phase in ("all", "idle", "rest"):
 		_copy_idle_portrait(actor)
-	if phase == "idle":
-		print(
-			f"IDLE READY — review assets/art/anim/{actor}/ (4 dirs) "
-			f"then: python3 scripts/art/pixellab_batch.py {actor} --phase rest",
-			flush=True,
-		)
 	print(f"done {actor} phase={phase}", flush=True)
 
 
@@ -604,10 +705,10 @@ def main() -> None:
 	parser.add_argument(
 		"--phase",
 		default="all",
-		choices=["idle", "walk", "attack", "skill", "rest", "all"],
+		choices=["idle", "idle-pixflux", "walk", "attack", "skill", "rest", "all"],
 		help=(
-			"idle: create character + idle only (review before rest); "
-			"rest: walk+attack+skill on approved character; all: full batch"
+			"idle / idle-pixflux: 4-dir pixflux stills (avoids breathing-idle twins); "
+			"rest: walk+attack+skill; all: full character batch"
 		),
 	)
 	args = parser.parse_args()
