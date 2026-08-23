@@ -33,7 +33,7 @@ func _test_mage_unlocks_by_level(errors: Array) -> void:
 
 
 func _test_all_classes_have_starter_and_unlocks(errors: Array) -> void:
-	for class_id in [ClassId.Value.SWORDMAN, ClassId.Value.MAGE, ClassId.Value.ARCHER]:
+	for class_id in [ClassId.Value.SWORDMAN, ClassId.Value.MAGE]:
 		var hero := Hero.new(class_id)
 		var starters: Array = hero.unlocked_skill_ids()
 		if starters.size() != 3:
@@ -42,6 +42,12 @@ func _test_all_classes_have_starter_and_unlocks(errors: Array) -> void:
 		var unlocked: Array = hero.unlocked_skill_ids()
 		if unlocked.size() != 5:
 			errors.append("class %d level 5 should have 5 skills, got %d" % [class_id, unlocked.size()])
+	var archer := Hero.new(ClassId.Value.ARCHER)
+	if archer.unlocked_skill_ids().size() != 4:
+		errors.append("Archer level 1 should have 4 skills (incl. passives), got %d" % archer.unlocked_skill_ids().size())
+	archer.level = 5
+	if archer.unlocked_skill_ids().size() != 6:
+		errors.append("Archer level 5 should have 6 skills, got %d" % archer.unlocked_skill_ids().size())
 
 
 func _test_player_loads_unlocked_skills(errors: Array) -> void:
