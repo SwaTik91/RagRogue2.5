@@ -1,7 +1,9 @@
 {
-  "source": "mannequin_zip",
-  "character_id": "d390eb33-bc73-49e4-9faf-604f2f555340",
+  "character_id": "c48072d0-da91-4149-ab16-276fb82e76ad",
+  "background_job_id": "54295986-3f79-4996-a628-df95a7f44466",
   "actor": "archer",
-  "imported_rotations": 12,
-  "note": "static single-frame per direction; run full batch when generations available"
+  "source": "create-character-with-4-directions",
+  "exported_frames": 118,
+  "animations": ["idle", "walk", "attack", "skill"],
+  "directions": ["down", "up", "left", "right"]
 }

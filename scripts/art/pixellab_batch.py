@@ -38,6 +38,16 @@ MANNEQUIN_ZIP_ANIM = {
 	"Walking": "walk",
 	"Attacking_with_a_bow": "attack",
 }
+# create-character-with-4-directions ZIP layout
+ZIP_ANIM_MAP = {
+	"animating": "idle",
+	"breathing-idle": "idle",
+	"idle": "idle",
+	"walking": "walk",
+	"walk": "walk",
+	"attack": "attack",
+	"skill": "skill",
+}
 CARDINAL_DIRS = ("south", "north", "east", "west")
 
 ACTOR_PROMPTS = {
@@ -146,9 +156,9 @@ def b64_image(path: str) -> dict:
 	return {"type": "base64", "base64": raw, "format": "png"}
 
 
-def create_character(actor: str, ref_image: str | None) -> str:
+def create_character(actor: str, ref_image: str | None, force: bool = False) -> str:
 	meta_path = f"{META_ROOT}/{actor}/meta.json"
-	if os.path.isfile(meta_path):
+	if not force and os.path.isfile(meta_path):
 		meta = json.load(open(meta_path))
 		cid = meta.get("character_id")
 		if cid:
@@ -224,44 +234,99 @@ def download(url: str, dest: str) -> None:
 	urllib.request.urlretrieve(url, dest)
 
 
+def fetch_character_zip(character_id: str) -> bytes:
+	key = load_api_key()
+	zip_url = f"{API_BASE}/characters/{character_id}/zip"
+	req = urllib.request.Request(
+		zip_url,
+		headers={"Authorization": f"Bearer {key}"},
+	)
+	with urllib.request.urlopen(req, timeout=300) as resp:
+		return resp.read()
+
+
+def export_frames_from_zip(actor: str, character_id: str, zdata: bytes) -> int:
+	zf = zipfile.ZipFile(BytesIO(zdata))
+	imported = 0
+	for inner in zf.namelist():
+		if "/animations/" not in inner or not inner.endswith(".png"):
+			continue
+		parts = inner.split("/")
+		try:
+			anim_idx = parts.index("animations")
+			pl_anim = parts[anim_idx + 1]
+			pl_dir_raw = parts[anim_idx + 2]
+			pl_dir = pl_dir_raw.split("-")[0]
+			fname = parts[anim_idx + 3]
+		except (ValueError, IndexError):
+			continue
+		game_anim = ZIP_ANIM_MAP.get(pl_anim.lower())
+		if not game_anim:
+			game_anim = _map_anim_name(pl_anim)
+		if not game_anim:
+			continue
+		game_dir = DIR_MAP.get(pl_dir, pl_dir)
+		if not fname.startswith("frame_"):
+			continue
+		frame_num = int(fname.replace("frame_", "").replace(".png", ""))
+		folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
+		os.makedirs(folder, exist_ok=True)
+		dest = f"{folder}/frame_{frame_num:02d}.png"
+		with open(dest, "wb") as out:
+			out.write(zf.read(inner))
+		imported += 1
+	print(f"  zip export: {imported} frames", flush=True)
+	return imported
+
+
 def export_frames(actor: str, character_id: str) -> None:
 	detail = wait_character_ready(character_id)
 	animations = detail.get("animations", [])
-	if not animations:
-		# Fallback: download ZIP export
-		print("no animations in API response, trying ZIP export...", flush=True)
-		zip_url = f"{API_BASE}/characters/{character_id}/zip"
-		key = load_api_key()
-		req = urllib.request.Request(
-			zip_url,
-			headers={"Authorization": f"Bearer {key}"},
-		)
-		with urllib.request.urlopen(req, timeout=300) as resp:
-			zdata = resp.read()
-		zf = zipfile.ZipFile(BytesIO(zdata))
-		out_zip = f"{META_ROOT}/{actor}/export.zip"
-		os.makedirs(os.path.dirname(out_zip), exist_ok=True)
-		with open(out_zip, "wb") as f:
-			f.write(zdata)
-		print(f"saved zip {out_zip} — unpack manually if needed", flush=True)
-		return
-	for group in animations:
-		anim_type = str(group.get("animation_type", "")).lower()
-		display = str(group.get("display_name", "")).lower()
-		game_anim = _map_anim_name(display) or _map_anim_name(anim_type)
-		if not game_anim:
-			continue
-		for dir_entry in group.get("directions", []):
-			pl_dir = str(dir_entry.get("direction", ""))
-			game_dir = DIR_MAP.get(pl_dir, pl_dir)
-			frames = dir_entry.get("frames", [])
+	if animations:
+		try:
+			exported = 0
+			for group in animations:
+				anim_type = str(group.get("animation_type", "")).lower()
+				display = str(group.get("display_name", "")).lower()
+				game_anim = _map_anim_name(display) or _map_anim_name(anim_type)
+				if not game_anim:
+					continue
+				for dir_entry in group.get("directions", []):
+					pl_dir = str(dir_entry.get("direction", ""))
+					game_dir = DIR_MAP.get(pl_dir, pl_dir)
+					frames = dir_entry.get("frames", [])
+					folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
+					os.makedirs(folder, exist_ok=True)
+					for old in os.listdir(folder):
+						if old.startswith("frame_") and (
+							old.endswith(".png") or old.endswith(".webp")
+						):
+							os.remove(os.path.join(folder, old))
+					for i, url in enumerate(frames):
+						dest = f"{folder}/frame_{i:02d}.png"
+						download(url, dest)
+						exported += 1
+					print(f"  {game_anim}/{game_dir}: {len(frames)} frames", flush=True)
+			if exported > 0:
+				return
+		except urllib.error.HTTPError as exc:
+			print(f"frame URL download failed ({exc.code}), using ZIP export...", flush=True)
+	print("export via character ZIP...", flush=True)
+	zdata = fetch_character_zip(character_id)
+	out_zip = f"{META_ROOT}/{actor}/export.zip"
+	os.makedirs(os.path.dirname(out_zip), exist_ok=True)
+	with open(out_zip, "wb") as f:
+		f.write(zdata)
+	for game_dir in ("down", "up", "left", "right"):
+		for game_anim in ("idle", "walk", "attack", "skill"):
 			folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
-			os.makedirs(folder, exist_ok=True)
-			for i, url in enumerate(frames):
-				ext = ".png"
-				dest = f"{folder}/frame_{i:02d}.png"
-				download(url, dest)
-			print(f"  {game_anim}/{game_dir}: {len(frames)} frames", flush=True)
+			if os.path.isdir(folder):
+				for old in os.listdir(folder):
+					if old.startswith("frame_") and (
+						old.endswith(".png") or old.endswith(".webp")
+					):
+						os.remove(os.path.join(folder, old))
+	export_frames_from_zip(actor, character_id, zdata)
 
 
 def _map_anim_name(pl_type: str) -> str | None:
@@ -363,7 +428,7 @@ def run_actor(actor: str, force: bool = False) -> None:
 	if not force and os.path.isfile(meta_path):
 		cid = json.load(open(meta_path)).get("character_id")
 	if not cid:
-		cid = create_character(actor, ref)
+		cid = create_character(actor, ref, force=force)
 	for job in ANIM_JOBS:
 		if actor != "archer" and job["id"] in ("skill",):
 			if "archer" not in job.get("action_description", ""):

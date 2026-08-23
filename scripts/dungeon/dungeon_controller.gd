@@ -264,7 +264,7 @@ func _clear_enemies() -> void:
 func _refresh_hp_label() -> void:
 	if _hp_label == null or _player == null or not is_instance_valid(_player):
 		return
-	_hp_label.text = "HP %d/%d  v0.1.19" % [maxi(0, int(_player.hp)), int(_player.hp_max)]
+	_hp_label.text = "HP %d/%d  v0.1.20" % [maxi(0, int(_player.hp)), int(_player.hp_max)]
 
 
 func _load_monster_table() -> Dictionary:
