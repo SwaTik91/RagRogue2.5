@@ -275,7 +275,7 @@ func _refresh_hp_label() -> void:
 	var suffix := ""
 	if _director != null and "god_mode" in _director and bool(_director.god_mode):
 		suffix = "  [GOD]"
-	_hp_label.text = "HP %d/%d  v0.1.31%s" % [maxi(0, int(_player.hp)), int(_player.hp_max), suffix]
+	_hp_label.text = "HP %d/%d  v0.1.32%s" % [maxi(0, int(_player.hp)), int(_player.hp_max), suffix]
 
 
 func _load_monster_table() -> Dictionary:
