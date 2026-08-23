@@ -10,7 +10,7 @@ Generated via `scripts/art/ludo_archer_3d_batch.py`:
 |------|-------------|
 | `anims/idle.glb` | idle_combat |
 | `anims/walk.glb` | walk_forward (in_place, loop) |
-| `anims/attack.glb` | bow_shot |
+| `anims/attack.glb` | Ludo `animate3DModel` — Drawn Bow (string to cheek) |
 | `anims/skill.glb` | bow_shot_sky |
 | `anims/hit.glb` | hit_front_heavy |
 

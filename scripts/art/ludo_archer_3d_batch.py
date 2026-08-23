@@ -31,8 +31,13 @@ ANIM_JOBS = [
     },
     {
         "id": "attack",
-        "preset_id": "bow_shot",
-        "crop_loop": False,
+        "custom": True,
+        "prompt": (
+            "Archer bow shot in place: left hand holds wooden bow vertical at chest, "
+            "right hand hooks bowstring and pulls it back clearly to the right cheek, "
+            "holds full draw briefly, releases string with follow-through, "
+            "bow faces away from body, string moves toward face when drawing."
+        ),
         "in_place": True,
     },
     {
@@ -157,6 +162,45 @@ def ensure_model(meta: dict) -> str:
     return rig_url
 
 
+def run_custom_anim_job(meta: dict, rig_url: str, job: dict, force: bool = False) -> None:
+    anim_id = job["id"]
+    dest = f"{ANIM_OUT}/{anim_id}.glb"
+    if os.path.isfile(dest) and not force:
+        print(f"skip {anim_id} custom (exists)", flush=True)
+        return
+    print(f"animate3DModel custom {anim_id}...", flush=True)
+    body = {
+        "model": rig_url,
+        "prompt": job["prompt"],
+        "in_place": job.get("in_place", True),
+        "request_id": f"ragrogue-archer-3d-{anim_id}-custom-v2",
+    }
+    result = mcp_call("animate3DModel", body, timeout=900)
+    anims = result.get("animations", [])
+    if not anims:
+        raise RuntimeError(f"no animations for custom {anim_id}: {result}")
+    # Prefer clip with draw/cheek keywords and reasonable fit
+    pick = anims[0]
+    for entry in anims:
+        clip = str(entry.get("clip_name", "")).lower()
+        if "draw" in clip or "full draw" in clip:
+            pick = entry
+            break
+    glb_url = pick.get("glb_url")
+    if not glb_url:
+        raise RuntimeError(f"no glb_url for custom {anim_id}: {pick}")
+    download(glb_url, dest)
+    meta.setdefault("animations", {})[anim_id] = {
+        "source": "animate3DModel",
+        "clip_name": pick.get("clip_name"),
+        "glb_url": glb_url,
+        "preview_url": pick.get("preview_url"),
+        "prompt": job["prompt"],
+    }
+    save_meta(meta)
+    print(f"done custom {anim_id} ({pick.get('clip_name')}) -> {dest}", flush=True)
+
+
 def run_anim_job(meta: dict, rig_url: str, job: dict, force: bool = False) -> None:
     anim_id = job["id"]
     dest = f"{ANIM_OUT}/{anim_id}.glb"
@@ -168,7 +212,7 @@ def run_anim_job(meta: dict, rig_url: str, job: dict, force: bool = False) -> No
         "model": rig_url,
         "preset_id": job["preset_id"],
         "in_place": job.get("in_place", True),
-        "request_id": f"ragrogue-archer-3d-{anim_id}-v1",
+        "request_id": f"ragrogue-archer-3d-{anim_id}-v2",
     }
     if job.get("crop_loop"):
         body["crop_loop"] = True
@@ -197,7 +241,10 @@ def main() -> None:
     meta = load_meta()
     rig_url = ensure_model(meta)
     for job in ANIM_JOBS:
-        run_anim_job(meta, rig_url, job, force=force)
+        if job.get("custom"):
+            run_custom_anim_job(meta, rig_url, job, force=force)
+        else:
+            run_anim_job(meta, rig_url, job, force=force)
     print("all archer 3D animations complete", flush=True)
 
 

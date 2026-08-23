@@ -15,10 +15,11 @@
       "clip_name": "walk_forward"
     },
     "attack": {
-      "preset_id": "bow_shot",
-      "glb_url": "https://storage.googleapis.com/ludo-assets/api/41a12702962b5230bfacbeaa9f652a10.glb",
-      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-309902186e2bc85a17a9fcb705ceb433.mp4",
-      "clip_name": "bow_shot"
+      "preset_id": "animate3DModel",
+      "clip_name": "Drawn Bow",
+      "glb_url": "https://storage.googleapis.com/ludo-assets/api/ea2038c69f91017cc6040219a7461d53.glb",
+      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-9af47d732493e5eac742c87120181dac.mp4",
+      "prompt": "left hand bow upright, draw string to cheek"
     },
     "skill": {
       "preset_id": "bow_shot_sky",
