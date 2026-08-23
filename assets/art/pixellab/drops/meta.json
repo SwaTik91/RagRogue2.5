@@ -1,5 +1,7 @@
 {
-  "character_id": "c838a025-5ec5-4617-b85a-fe103959dae8",
-  "background_job_id": "5431d02e-1199-40b4-a845-2531f7ebceeb",
-  "actor": "drops"
+  "source": "mannequin_state_zip",
+  "character_id": "3171ead1-2139-44e5-95ec-a2264d4d3e45",
+  "actor": "drops",
+  "state_folder": "Idle",
+  "imported_frames": 136
 }

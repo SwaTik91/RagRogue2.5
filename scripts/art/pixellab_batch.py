@@ -517,6 +517,134 @@ def import_mannequin_zip(character_id: str, actor: str, copy_skill_from_attack: 
 	print(f"imported {imported} rotations → {ANIM_ROOT}/{actor}/", flush=True)
 
 
+def find_character_by_tag(tag: str) -> str | None:
+	tag_l = tag.strip().lower()
+	resp = api("GET", "/characters?limit=100")
+	for ch in resp.get("characters", []):
+		if ch.get("status") != "completed":
+			continue
+		tags = ch.get("tags", []) or []
+		if any(str(t).lower() == tag_l for t in tags):
+			return ch["id"]
+	return None
+
+
+MANNEQUIN_STATE_ANIM_PREFIX = {
+	"breath_idle": "idle",
+	"breathing-idle": "idle",
+	"the_purple_slime": "walk",
+	"walking": "walk",
+	"walk": "walk",
+	"a_ranged_attack": "skill",
+	"attack": "attack",
+}
+
+
+def _map_mannequin_anim_folder(folder_name: str) -> str | None:
+	low = folder_name.lower().replace("-", "_")
+	if "taking_punch" in low or "taking-punch" in low:
+		return None
+	for prefix, game_anim in MANNEQUIN_STATE_ANIM_PREFIX.items():
+		if low.startswith(prefix) or prefix in low:
+			return game_anim
+	return None
+
+
+def import_mannequin_state_zip(
+	character_id: str,
+	actor: str,
+	state_folder: str = "Idle",
+	copy_attack_from_skill: bool = True,
+) -> None:
+	"""Import mannequin ZIP with animations/* (PixelLab web UI Drops2 layout)."""
+	key = load_api_key()
+	zip_url = f"{API_BASE}/characters/{character_id}/zip"
+	req = urllib.request.Request(zip_url, headers={"Authorization": f"Bearer {key}"})
+	print(f"download ZIP for {character_id}...", flush=True)
+	with urllib.request.urlopen(req, timeout=300) as resp:
+		zdata = resp.read()
+	out_zip = f"{META_ROOT}/{actor}/import.zip"
+	os.makedirs(os.path.dirname(out_zip), exist_ok=True)
+	with open(out_zip, "wb") as f:
+		f.write(zdata)
+	zf = zipfile.ZipFile(BytesIO(zdata))
+	imported = 0
+	prefix = f"{state_folder}/animations/"
+	for inner in zf.namelist():
+		if not inner.startswith(prefix) or not inner.endswith(".png"):
+			continue
+		parts = inner.split("/")
+		try:
+			anim_idx = parts.index("animations")
+			pl_anim_folder = parts[anim_idx + 1]
+			pl_dir_raw = parts[anim_idx + 2]
+			fname = parts[anim_idx + 3]
+		except (ValueError, IndexError):
+			continue
+		game_anim = _map_mannequin_anim_folder(pl_anim_folder)
+		if not game_anim:
+			continue
+		pl_dir = pl_dir_raw.split("-")[0]
+		if pl_dir not in DIR_MAP:
+			continue
+		game_dir = DIR_MAP[pl_dir]
+		if not fname.startswith("frame_"):
+			continue
+		frame_num = int(fname.replace("frame_", "").replace(".png", ""))
+		folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
+		os.makedirs(folder, exist_ok=True)
+		dest = f"{folder}/frame_{frame_num:02d}.png"
+		with open(dest, "wb") as out:
+			out.write(zf.read(inner))
+		imported += 1
+	# per-folder frame counts
+	for game_dir in ("down", "up", "left", "right"):
+		for game_anim in ("idle", "walk", "skill"):
+			folder = f"{ANIM_ROOT}/{actor}/{game_dir}/{game_anim}"
+			if os.path.isdir(folder):
+				frames = sorted(
+					f for f in os.listdir(folder)
+					if f.startswith("frame_") and f.endswith(".png")
+				)
+				if frames:
+					print(f"  {game_anim}/{game_dir}: {len(frames)} frames", flush=True)
+	if copy_attack_from_skill:
+		for game_dir in ("down", "up", "left", "right"):
+			skill_dir = f"{ANIM_ROOT}/{actor}/{game_dir}/skill"
+			attack_dir = f"{ANIM_ROOT}/{actor}/{game_dir}/attack"
+			if not os.path.isdir(skill_dir):
+				continue
+			os.makedirs(attack_dir, exist_ok=True)
+			for fname in os.listdir(skill_dir):
+				if fname.startswith("frame_") and fname.endswith(".png"):
+					with open(
+						os.path.join(skill_dir, fname), "rb"
+					) as s, open(os.path.join(attack_dir, fname), "wb") as d:
+						d.write(s.read())
+	json.dump(
+		{
+			"source": "mannequin_state_zip",
+			"character_id": character_id,
+			"actor": actor,
+			"state_folder": state_folder,
+			"imported_frames": imported,
+		},
+		open(f"{META_ROOT}/{actor}/meta.json", "w"),
+		indent=2,
+	)
+	_copy_idle_portrait(actor)
+	print(f"imported {imported} frames → {ANIM_ROOT}/{actor}/", flush=True)
+
+
+def import_by_tag(tag: str, actor: str) -> None:
+	cid = find_character_by_tag(tag)
+	if not cid:
+		raise RuntimeError(f"no completed character with tag {tag!r}")
+	print(f"import tag {tag} → {actor} ({cid})", flush=True)
+	import_mannequin_state_zip(cid, actor)
+	write_preview_sheet(actor)
+
+
 def find_mannequin_character_id(actor: str) -> str | None:
 	"""Pick a completed mannequin character from the account (Walking state preferred for ZIP bundle)."""
 	resp = api("GET", "/characters?limit=50")
@@ -775,6 +903,11 @@ def main() -> None:
 		help="import completed mannequin ZIP from account (no generations used)",
 	)
 	parser.add_argument(
+		"--import-tag",
+		default="",
+		help="import completed mannequin character by PixelLab tag (e.g. Drops2)",
+	)
+	parser.add_argument(
 		"--character-id",
 		default="",
 		help="PixelLab character id for --import-existing ZIP download",
@@ -799,6 +932,9 @@ def main() -> None:
 		if not cid:
 			raise RuntimeError("no completed mannequin character found on account")
 		import_mannequin_zip(cid, args.actor)
+		return
+	if args.import_tag.strip():
+		import_by_tag(args.import_tag.strip(), args.actor)
 		return
 	_dispatch(args.actor, force=args.force, phase=args.phase)
 
