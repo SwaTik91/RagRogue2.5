@@ -199,9 +199,7 @@ func _flash_hit() -> void:
 	var host := _tween_host()
 	if host == null or anim == null:
 		return
-	var tween := host.create_tween()
-	tween.tween_property(anim, "modulate", Color(1.45, 0.5, 0.5, 1), 0.05)
-	tween.tween_property(anim, "modulate", Color.WHITE, 0.12)
+	SpriteHitFlash.flash(anim, host)
 
 
 func _tween_host() -> Node:
