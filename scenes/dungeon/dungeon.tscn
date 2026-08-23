@@ -59,7 +59,7 @@ offset_top = 16.0
 offset_right = 320.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 22
-text = "HP --/--  v0.1.30"
+text = "HP --/--  v0.1.31"
 
 [node name="GodModeButton" type="Button" parent="HUD/SafeArea"]
 layout_mode = 2
