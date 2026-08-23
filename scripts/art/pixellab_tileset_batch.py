@@ -8,13 +8,14 @@ Usage:
 """
 import argparse
 import base64
+import io
 import json
 import os
-import struct
 import time
 import urllib.error
 import urllib.request
-import zlib
+
+from PIL import Image
 
 API_BASE = "https://api.pixellab.ai/v2"
 WORKSPACE = "/workspace"
@@ -216,78 +217,21 @@ def create_decor_pixflux(name: str, description: str) -> bytes:
 
 
 def decode_png_rgba(raw: bytes) -> tuple[int, int, list]:
-	# Minimal PNG decoder (RGBA8, filter type 0 only paths) — fallback to empty
-	if raw[:8] != b"\x89PNG\r\n\x1a\n":
-		raise ValueError("not png")
-	pos = 8
-	w, h = 0, 0
-	idata = b""
-	while pos < len(raw):
-		length = struct.unpack(">I", raw[pos:pos + 4])[0]
-		chunk = raw[pos + 4:pos + 8]
-		data = raw[pos + 8:pos + 8 + length]
-		pos += 12 + length
-		if chunk == b"IHDR":
-			w, h = struct.unpack(">II", data[:8])
-		elif chunk == b"IDAT":
-			idata += data
-		elif chunk == b"IEND":
-			break
-	if not idata:
-		raise ValueError("no IDAT")
-	decomp = zlib.decompress(idata)
-	stride = w * 4 + 1
-	pixels = []
-	prev = [0] * (w * 4)
-	for y in range(h):
-		row_start = y * stride
-		filter_type = decomp[row_start]
-		row = list(decomp[row_start + 1:row_start + stride - 1 + 1][: w * 4])
-		if filter_type == 0:
-			cur = row
-		elif filter_type == 1:
-			cur = []
-			for i, b in enumerate(row):
-				left = cur[i - 4] if i >= 4 else 0
-				cur.append((b + left) & 255)
-		elif filter_type == 2:
-			cur = [(row[i] + prev[i]) & 255 for i in range(len(row))]
-		else:
-			cur = row
-		pixels.extend(cur)
-		prev = cur
-	return w, h, pixels
+	img = Image.open(io.BytesIO(raw)).convert("RGBA")
+	w, h = img.size
+	return w, h, list(img.tobytes())
 
 
 def scale_rgba(w: int, h: int, pixels: list, out_w: int, out_h: int) -> list:
-	out = []
-	for y in range(out_h):
-		sy = int(y * h / out_h)
-		for x in range(out_w):
-			sx = int(x * w / out_w)
-			i = (sy * w + sx) * 4
-			out.extend(pixels[i:i + 4])
-	return out
+	img = Image.frombytes("RGBA", (w, h), bytes(pixels))
+	resized = img.resize((out_w, out_h), Image.Resampling.NEAREST)
+	return list(resized.tobytes())
 
 
 def write_png(path: str, w: int, h: int, rgba: list) -> None:
-	def chunk(tag: bytes, data: bytes) -> bytes:
-		crc = zlib.crc32(tag + data) & 0xffffffff
-		return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
-
-	raw_rows = []
-	for y in range(h):
-		row = bytes([0])
-		start = y * w * 4
-		for x in range(w * 4):
-			row += bytes([rgba[start + x]])
-		raw_rows.append(row)
-	compressed = zlib.compress(b"".join(raw_rows), 9)
-	ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
-	out = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", compressed) + chunk(b"IEND", b"")
 	os.makedirs(os.path.dirname(path), exist_ok=True)
-	with open(path, "wb") as f:
-		f.write(out)
+	img = Image.frombytes("RGBA", (w, h), bytes(rgba))
+	img.save(path, format="PNG", compress_level=9)
 
 
 def tile_image_bytes(tile: dict) -> bytes:
