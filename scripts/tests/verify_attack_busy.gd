@@ -20,8 +20,9 @@ func _init() -> void:
 	var real := SpriteFramesFactory.player_frames(ClassId.Value.MAGE)
 	animator.apply_sprite_frames(real, SpriteCatalog.PLAYER_TARGET_HEIGHT)
 	animator.play_attack(false)
-	if sprite.animation != "attack":
-		print("FAIL: expected attack, got ", sprite.animation)
+	var atk := String(sprite.animation)
+	if not atk.begins_with("attack"):
+		print("FAIL: expected attack_*, got ", sprite.animation)
 		quit(1)
 	print("OK: attack/walk animator logic")
 	quit()
