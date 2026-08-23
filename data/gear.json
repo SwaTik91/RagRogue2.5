@@ -1,0 +1,22 @@
+[
+  {"id": "oak_brand", "name": "Oak Brand", "slot": "weapon", "rarity": 0, "atk_bonus": 2, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "ember_twig", "name": "Ember Twig", "slot": "weapon", "rarity": 0, "atk_bonus": 3, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "ash_recurve", "name": "Ash Recurve", "slot": "weapon", "rarity": 0, "atk_bonus": 2, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "river_edge", "name": "River Edge", "slot": "weapon", "rarity": 1, "atk_bonus": 5, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "cinder_spire", "name": "Cinder Spire", "slot": "weapon", "rarity": 1, "atk_bonus": 6, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "thorn_lath", "name": "Thorn Lath", "slot": "weapon", "rarity": 1, "atk_bonus": 5, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "vault_fang", "name": "Vault Fang", "slot": "weapon", "rarity": 2, "atk_bonus": 9, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "dawn_quill", "name": "Dawn Quill", "slot": "weapon", "rarity": 2, "atk_bonus": 8, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "linen_wrap", "name": "Linen Wrap", "slot": "armor", "rarity": 0, "atk_bonus": 0, "def_bonus": 1, "hp_bonus": 4},
+  {"id": "moss_mail", "name": "Moss Mail", "slot": "armor", "rarity": 0, "atk_bonus": 0, "def_bonus": 2, "hp_bonus": 6},
+  {"id": "dusk_plate", "name": "Dusk Plate", "slot": "armor", "rarity": 1, "atk_bonus": 0, "def_bonus": 4, "hp_bonus": 10},
+  {"id": "ember_weave", "name": "Ember Weave", "slot": "armor", "rarity": 1, "atk_bonus": 0, "def_bonus": 3, "hp_bonus": 8},
+  {"id": "warden_carapace", "name": "Warden Carapace", "slot": "armor", "rarity": 2, "atk_bonus": 0, "def_bonus": 6, "hp_bonus": 16},
+  {"id": "pebble_charm", "name": "Pebble Charm", "slot": "accessory", "rarity": 0, "atk_bonus": 0, "def_bonus": 0, "hp_bonus": 5},
+  {"id": "luck_thread", "name": "Luck Thread", "slot": "accessory", "rarity": 0, "atk_bonus": 1, "def_bonus": 0, "hp_bonus": 0},
+  {"id": "fern_brooch", "name": "Fern Brooch", "slot": "accessory", "rarity": 0, "atk_bonus": 0, "def_bonus": 1, "hp_bonus": 0},
+  {"id": "amber_loop", "name": "Amber Loop", "slot": "accessory", "rarity": 1, "atk_bonus": 2, "def_bonus": 0, "hp_bonus": 6},
+  {"id": "tide_sigil", "name": "Tide Sigil", "slot": "accessory", "rarity": 1, "atk_bonus": 0, "def_bonus": 2, "hp_bonus": 8},
+  {"id": "vault_crest", "name": "Vault Crest", "slot": "accessory", "rarity": 2, "atk_bonus": 3, "def_bonus": 2, "hp_bonus": 12},
+  {"id": "sunken_band", "name": "Sunken Band", "slot": "accessory", "rarity": 2, "atk_bonus": 4, "def_bonus": 0, "hp_bonus": 8}
+]
