@@ -19,9 +19,9 @@ script = ExtResource("1_dc")
 [node name="CameraRig25D" type="Node3D" parent="."]
 script = ExtResource("5_cam")
 target_path = NodePath("../Player")
-tilt_degrees = 80.0
-orbit_distance = 360.0
-ortho_size = 260.0
+tilt_degrees = 58.0
+orbit_distance = 380.0
+ortho_size = 250.0
 look_at_height = 40.0
 smoothing = 16.0
 
@@ -48,7 +48,7 @@ offset_top = 16.0
 offset_right = 320.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 22
-text = "HP --/--  v0.1.16"
+text = "HP --/--  v0.1.17"
 
 [node name="BannerLabel" type="Label" parent="HUD/SafeArea"]
 layout_mode = 2
