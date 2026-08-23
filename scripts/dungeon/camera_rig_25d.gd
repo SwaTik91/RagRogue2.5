@@ -3,11 +3,12 @@ extends Node3D
 ## `tilt_degrees` = elevation above the ground plane (higher = more top-down).
 
 @export var target_path: NodePath
-@export var orbit_distance := 380.0
+@export var orbit_distance := 360.0
 @export var tilt_degrees := 80.0
-@export var ortho_size := 300.0
-@export var look_at_height := 42.0
-@export var smoothing := 8.0
+@export var ortho_size := 260.0
+@export var look_at_height := 40.0
+@export var smoothing := 16.0
+@export var reference_viewport_height := 720.0
 
 var _target: Node3D = null
 var _camera: Camera3D = null
@@ -17,17 +18,33 @@ func _ready() -> void:
 	_camera = get_node_or_null("Camera3D") as Camera3D
 	if _camera != null:
 		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-		_camera.size = ortho_size
 		_camera.make_current()
 	if target_path != NodePath():
 		_target = get_node_or_null(target_path) as Node3D
+	call_deferred("_bootstrap_camera")
 
 
 func set_target(node: Node3D) -> void:
 	_target = node
+	_apply_camera(1.0)
+
+
+func _bootstrap_camera() -> void:
+	if _camera != null:
+		_camera.make_current()
+	_apply_camera(1.0)
 
 
 func _physics_process(delta: float) -> void:
+	if _target == null or not is_instance_valid(_target):
+		return
+	var weight := 1.0
+	if smoothing > 0.0 and delta > 0.0:
+		weight = clampf(delta * smoothing, 0.0, 1.0)
+	_apply_camera(weight)
+
+
+func _apply_camera(weight: float) -> void:
 	if _target == null or not is_instance_valid(_target):
 		return
 	var focus := _target.global_position + Vector3(0.0, look_at_height, 0.0)
@@ -35,9 +52,18 @@ func _physics_process(delta: float) -> void:
 	var back := orbit_distance * cos(elev)
 	var up := orbit_distance * sin(elev)
 	var desired := focus + Vector3(0.0, up, back)
-	if smoothing > 0.0 and delta > 0.0:
-		global_position = global_position.lerp(desired, clampf(delta * smoothing, 0.0, 1.0))
-	else:
+	if weight >= 1.0:
 		global_position = desired
+	else:
+		global_position = global_position.lerp(desired, weight)
+	look_at(focus, Vector3.UP)
 	if _camera != null:
-		_camera.look_at(focus, Vector3.UP)
+		_camera.size = _effective_ortho_size()
+
+
+func _effective_ortho_size() -> float:
+	var vp := get_viewport()
+	if vp == null:
+		return ortho_size
+	var h := maxf(vp.get_visible_rect().size.y, 1.0)
+	return ortho_size * (h / maxf(reference_viewport_height, 1.0))
