@@ -3,6 +3,9 @@
   "character_id": "498da150-1e5c-48af-81be-6d140b331a06",
   "actor": "angel_mvp",
   "state_folder": "Idle",
-  "imported_frames": 0,
-  "procedural_anims": "walk/attack/skill derived from idle via scripts/art/procedural_mob_anims.py"
+  "imported_frames": 26,
+  "export_zip": "assets/art/pixellab/angel_mvp/export.zip",
+  "pixellab_status": "completed",
+  "pixellab_anims": ["walk", "attack", "skill"],
+  "note": "south-only PixelLab anims; up/left/right derived via procedural_mob_anims.py"
 }
