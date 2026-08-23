@@ -128,6 +128,7 @@ static func _paint_corner_terrain(atlas: TileSetAtlasSource, coord: Vector2i, co
 	var ne := _terrain_for_corner(str(corners.get("NE", "lower")))
 	var sw := _terrain_for_corner(str(corners.get("SW", "lower")))
 	var se := _terrain_for_corner(str(corners.get("SE", "lower")))
+	tile_data.set_terrain(_center_terrain_for_corners(nw, ne, sw, se))
 	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER, nw)
 	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER, ne)
 	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER, sw)
@@ -136,6 +137,16 @@ static func _paint_corner_terrain(atlas: TileSetAtlasSource, coord: Vector2i, co
 
 static func _terrain_for_corner(corner_val: String) -> int:
 	if corner_val == "upper":
+		return TERRAIN_PATH
+	return TERRAIN_GRASS
+
+
+static func _center_terrain_for_corners(nw: int, ne: int, sw: int, se: int) -> int:
+	var path_votes := 0
+	for t in [nw, ne, sw, se]:
+		if t == TERRAIN_PATH:
+			path_votes += 1
+	if path_votes >= 3:
 		return TERRAIN_PATH
 	return TERRAIN_GRASS
 

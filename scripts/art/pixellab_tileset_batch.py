@@ -23,6 +23,66 @@ TILES_DIR = f"{OUT_ROOT}/tiles"
 GAME_TILE = 64
 SRC_TILE = 32
 
+# Sampled from opaque pixels in wang_0 / wang_15 after export.
+GRASS_RGB = (26, 200, 2)
+PATH_RGB = (74, 63, 73)
+SOLID_ALPHA_CUT = 48
+
+
+def solidify_wang_rgba(
+	w: int,
+	h: int,
+	rgba: list,
+	corners: dict,
+	grass_rgb: tuple[int, int, int] = GRASS_RGB,
+	path_rgb: tuple[int, int, int] = PATH_RGB,
+) -> list:
+	"""PixelLab Wang tiles are corner overlays with large transparent regions.
+	Godot terrain needs fully opaque cells — fill each quadrant with its terrain base."""
+	out = list(rgba)
+	quads = {
+		"NW": (0, 0, w // 2, h // 2),
+		"NE": (w // 2, 0, w, h // 2),
+		"SW": (0, h // 2, w // 2, h),
+		"SE": (w // 2, h // 2, w, h),
+	}
+	for corner, (x0, y0, x1, y1) in quads.items():
+		fill = path_rgb if corners.get(corner, "lower") == "upper" else grass_rgb
+		for y in range(y0, y1):
+			for x in range(x0, x1):
+				i = (y * w + x) * 4
+				if out[i + 3] < SOLID_ALPHA_CUT:
+					out[i] = fill[0]
+					out[i + 1] = fill[1]
+					out[i + 2] = fill[2]
+					out[i + 3] = 255
+	return out
+
+
+def solidify_decor_rgba(
+	w: int,
+	h: int,
+	rgba: list,
+	ground_rgb: tuple[int, int, int] = GRASS_RGB,
+) -> list:
+	"""Props are cutouts; fill transparent pixels with grass so holes don't show on paths."""
+	out = list(rgba)
+	for y in range(h):
+		for x in range(w):
+			i = (y * w + x) * 4
+			a = out[i + 3]
+			if a == 0:
+				out[i] = ground_rgb[0]
+				out[i + 1] = ground_rgb[1]
+				out[i + 2] = ground_rgb[2]
+				out[i + 3] = 255
+			elif a < 220:
+				t = a / 255.0
+				for c in range(3):
+					out[i + c] = int(out[i + c] * t + ground_rgb[c] * (1.0 - t))
+				out[i + 3] = 255
+	return out
+
 
 def load_api_key() -> str:
 	key = os.environ.get("PIXELLAB_API_KEY", "").strip()
@@ -315,6 +375,7 @@ def build_atlas(meta: dict) -> None:
 		raw = open(f"{TILES_DIR}/{entry['id']}.png", "rb").read()
 		sw, sh, px = decode_png_rgba(raw)
 		scaled = scale_rgba(sw, sh, px, tile, tile)
+		scaled = solidify_wang_rgba(tile, tile, scaled, entry.get("corners", {}))
 		_blit(canvas, w, h, col * tile, row * tile, tile, tile, scaled)
 
 	for name, (col, row) in meta.get("decor_atlas", {}).items():
@@ -324,6 +385,8 @@ def build_atlas(meta: dict) -> None:
 		raw = open(path, "rb").read()
 		dw, dh, px = decode_png_rgba(raw)
 		scaled = scale_rgba(dw, dh, px, tile, tile)
+		scaled = solidify_decor_rgba(tile, tile, scaled)
+		write_png(path, tile, tile, scaled)
 		_blit(canvas, w, h, col * tile, row * tile, tile, tile, scaled)
 
 	out_path = f"{OUT_ROOT}/atlas.png"
@@ -351,14 +414,33 @@ def run_dungeon(force: bool) -> None:
 	export_tileset(tid)
 
 
+def rebuild_local_atlas() -> None:
+	"""Re-solidify and rebuild atlas from existing tiles/decor without API calls."""
+	meta_path = f"{OUT_ROOT}/meta.json"
+	if not os.path.isfile(meta_path):
+		raise SystemExit(f"missing {meta_path}")
+	meta = json.load(open(meta_path))
+	build_atlas(meta)
+	json.dump(meta, open(meta_path, "w"), indent=2)
+	print("rebuilt local dungeon atlas", flush=True)
+
+
 def main() -> None:
 	parser = argparse.ArgumentParser()
 	parser.add_argument("target", nargs="?", default="dungeon")
 	parser.add_argument("--force", action="store_true")
 	parser.add_argument("--balance", action="store_true")
+	parser.add_argument(
+		"--rebuild-local",
+		action="store_true",
+		help="re-solidify tiles and rebuild atlas from existing dungeon assets",
+	)
 	args = parser.parse_args()
 	if args.balance:
 		print(json.dumps(api("GET", "/balance"), indent=2))
+		return
+	if args.rebuild_local:
+		rebuild_local_atlas()
 		return
 	if args.target == "dungeon":
 		run_dungeon(args.force)
