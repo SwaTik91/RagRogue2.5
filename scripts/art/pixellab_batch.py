@@ -64,6 +64,97 @@ ACTOR_PROMPTS = {
 		"fantasy mage with staff and robes, magic glow, "
 		"top-down roguelike hero, 16-bit pixel art"
 	),
+	"lunatic": (
+		"ragnarok online lunatic monster, wild humanoid boy with messy brown hair, "
+		"ragged clothes, angry expression, holding orange carrot, top-down roguelike enemy, "
+		"high quality 16-bit pixel art, black outline, readable silhouette"
+	),
+	"drops": (
+		"ragnarok online drops monster, ONE single floating brown jelly blob only, "
+		"cute round face, small wings, solitary creature centered alone in frame, "
+		"no duplicate, no second character, no pair, top-down roguelike enemy, "
+		"high quality 16-bit pixel art, black outline"
+	),
+	"angel_mvp": (
+		"ragnarok online angeling MVP boss, large fluffy white angel blob with golden halo, "
+		"small wings, cute but powerful, top-down roguelike boss monster, "
+		"high detail premium pixel art, black outline, imposing size"
+	),
+}
+
+MOB_IMAGE_SIZE = {
+	"lunatic": (96, 96),
+	"drops": (112, 112),
+	"angel_mvp": (128, 128),
+}
+
+MOB_ANIM_JOBS = {
+	"lunatic": [
+		{"id": "idle", "mode": "template", "template_animation_id": "breathing-idle"},
+		{"id": "walk", "mode": "template", "template_animation_id": "walk"},
+		{
+			"id": "attack",
+			"mode": "v3",
+			"action_description": (
+				"lunatic throws small orange carrot forward from right hand, "
+				"quick wind-up and release toward camera, top-down roguelike attack"
+			),
+			"frame_count": 8,
+		},
+		{
+			"id": "skill",
+			"mode": "v3",
+			"action_description": (
+				"lunatic pulls out large carrot and hurls it forward with full body throw, "
+				"dramatic wind-up, spitting projectile special attack"
+			),
+			"frame_count": 8,
+		},
+	],
+	"drops": [
+		{"id": "idle", "mode": "template", "template_animation_id": "breathing-idle"},
+		{"id": "walk", "mode": "template", "template_animation_id": "walk"},
+		{
+			"id": "attack",
+			"mode": "v3",
+			"action_description": (
+				"ONE single drops jelly monster spits one small red apple forward from mouth, "
+				"solo creature centered, no duplicate bodies, top-down roguelike attack"
+			),
+			"frame_count": 8,
+		},
+		{
+			"id": "skill",
+			"mode": "v3",
+			"action_description": (
+				"ONE single drops monster opens mouth and spits apple forward, "
+				"solo jelly blob only, no second creature, special spit attack"
+			),
+			"frame_count": 8,
+		},
+	],
+	"angel_mvp": [
+		{"id": "idle", "mode": "template", "template_animation_id": "breathing-idle"},
+		{"id": "walk", "mode": "template", "template_animation_id": "walk"},
+		{
+			"id": "attack",
+			"mode": "v3",
+			"action_description": (
+				"angeling boss fires holy light bolt forward from body glow, "
+				"wings flare, gentle but powerful ranged attack"
+			),
+			"frame_count": 8,
+		},
+		{
+			"id": "skill",
+			"mode": "v3",
+			"action_description": (
+				"angeling MVP channels radiant healing light upward then smites with holy burst, "
+				"boss special cast animation, wings spread wide"
+			),
+			"frame_count": 10,
+		},
+	],
 }
 
 ANIM_JOBS = [
@@ -168,13 +259,14 @@ def create_character(actor: str, ref_image: str | None, force: bool = False) -> 
 				return cid
 	body = {
 		"description": ACTOR_PROMPTS.get(actor, f"top-down roguelike {actor}"),
-		"image_size": {"width": 96, "height": 96},
 		"view": "low top-down",
 		"outline": "single color black outline",
 		"shading": "medium shading",
 		"detail": "medium detail",
 		"text_guidance_scale": 8.0,
 	}
+	w, h = MOB_IMAGE_SIZE.get(actor, (96, 96))
+	body["image_size"] = {"width": w, "height": h}
 	if ref_image and os.path.isfile(ref_image):
 		body["color_image"] = b64_image(ref_image)
 		body["force_colors"] = False
@@ -419,7 +511,33 @@ def find_mannequin_character_id(actor: str) -> str | None:
 	return None
 
 
-def run_actor(actor: str, force: bool = False) -> None:
+PHASE_ORDER = ("idle", "walk", "attack", "skill")
+
+
+def anim_jobs_for(actor: str) -> list:
+	if actor in MOB_ANIM_JOBS:
+		return MOB_ANIM_JOBS[actor]
+	if actor == "archer":
+		return ANIM_JOBS
+	return [
+		{"id": "idle", "mode": "template", "template_animation_id": "breathing-idle"},
+		{"id": "walk", "mode": "template", "template_animation_id": "walk"},
+		{"id": "attack", "mode": "template", "template_animation_id": "attack"},
+	]
+
+
+def jobs_for_phase(actor: str, phase: str) -> list:
+	jobs = anim_jobs_for(actor)
+	if phase == "all":
+		return jobs
+	if phase == "rest":
+		return [j for j in jobs if str(j.get("id", "")) != "idle"]
+	if phase in PHASE_ORDER:
+		return [j for j in jobs if str(j.get("id", "")) == phase]
+	raise SystemExit(f"unknown phase {phase!r}; use idle|walk|attack|skill|rest|all")
+
+
+def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	ref = f"{GAME_ART}/{actor}-idle.png"
 	if not os.path.isfile(ref):
 		ref = None
@@ -427,29 +545,50 @@ def run_actor(actor: str, force: bool = False) -> None:
 	cid = None
 	if not force and os.path.isfile(meta_path):
 		cid = json.load(open(meta_path)).get("character_id")
-	if not cid:
+	needs_character = phase in ("all", "idle") and not cid
+	if needs_character:
 		cid = create_character(actor, ref, force=force)
-	for job in ANIM_JOBS:
-		if actor != "archer" and job["id"] in ("skill",):
-			if "archer" not in job.get("action_description", ""):
-				pass
-		# Only archer-specific attack prompts for archer actor
-		if actor != "archer" and job["id"] in ("attack", "skill"):
-			job = dict(job)
-			if job["id"] == "attack":
-				job["mode"] = "template"
-				job["template_animation_id"] = "attack"
-				job.pop("action_description", None)
-			else:
-				continue
+	elif cid is None:
+		raise SystemExit(
+			f"no character_id in {meta_path}; run --phase idle first (or --force)"
+		)
+	jobs = jobs_for_phase(actor, phase)
+	if not jobs:
+		raise SystemExit(f"no animation jobs for actor={actor} phase={phase}")
+	for job in jobs:
 		request_animation(cid, job)
 	export_frames(actor, cid)
-	print(f"done {actor}", flush=True)
+	if phase in ("all", "idle", "rest"):
+		_copy_idle_portrait(actor)
+	if phase == "idle":
+		print(
+			f"IDLE READY — review assets/art/anim/{actor}/ (4 dirs) "
+			f"then: python3 scripts/art/pixellab_batch.py {actor} --phase rest",
+			flush=True,
+		)
+	print(f"done {actor} phase={phase}", flush=True)
+
+
+def _copy_idle_portrait(actor: str) -> None:
+	src = f"{ANIM_ROOT}/{actor}/down/idle/frame_00.png"
+	if not os.path.isfile(src):
+		return
+	name_map = {
+		"angel_mvp": "angel-mvp.png",
+		"lunatic": "lunatic.png",
+		"drops": "drops.png",
+	}
+	dst_name = name_map.get(actor, f"{actor}.png")
+	dst = f"{GAME_ART}/{dst_name}"
+	os.makedirs(GAME_ART, exist_ok=True)
+	with open(src, "rb") as s, open(dst, "wb") as d:
+		d.write(s.read())
+	print(f"  portrait → {dst}", flush=True)
 
 
 def main() -> None:
 	parser = argparse.ArgumentParser(description="PixelLab 4-dir character + anims")
-	parser.add_argument("actor", nargs="?", default="archer", help="archer|swordman|mage")
+	parser.add_argument("actor", nargs="?", default="archer", help="archer|lunatic|drops|angel_mvp|...")
 	parser.add_argument("--force", action="store_true", help="recreate character")
 	parser.add_argument("--balance", action="store_true", help="print API balance only")
 	parser.add_argument(
@@ -461,6 +600,15 @@ def main() -> None:
 		"--character-id",
 		default="",
 		help="PixelLab character id for --import-existing ZIP download",
+	)
+	parser.add_argument(
+		"--phase",
+		default="all",
+		choices=["idle", "walk", "attack", "skill", "rest", "all"],
+		help=(
+			"idle: create character + idle only (review before rest); "
+			"rest: walk+attack+skill on approved character; all: full batch"
+		),
 	)
 	args = parser.parse_args()
 	if args.balance:
@@ -474,7 +622,7 @@ def main() -> None:
 			raise RuntimeError("no completed mannequin character found on account")
 		import_mannequin_zip(cid, args.actor)
 		return
-	run_actor(args.actor, force=args.force)
+	run_actor(args.actor, force=args.force, phase=args.phase)
 
 
 if __name__ == "__main__":
