@@ -3,6 +3,7 @@ extends Node
 const AGGRO_RADIUS := 180.0
 const MELEE_RANGE := 90.0
 const RANGED_RANGE := 160.0
+const ARCHER_RANGE := 320.0
 const AOE_RADIUS := 160.0
 const BASIC_CD_KEY := "_basic"
 const BASIC_CD := 1.0
@@ -19,7 +20,13 @@ var room_cleared: bool = false
 func attack_range_for_class(class_id: int) -> float:
 	if class_id == ClassId.Value.SWORDMAN:
 		return MELEE_RANGE
+	if class_id == ClassId.Value.ARCHER:
+		return ARCHER_RANGE
 	return RANGED_RANGE
+
+
+func engagement_radius_for_class(class_id: int) -> float:
+	return maxf(AGGRO_RADIUS, attack_range_for_class(class_id))
 
 
 func to_combatant(pos: Vector2, hp: float) -> Dictionary:
@@ -37,8 +44,9 @@ func player_act(player_state: Dictionary, foes: Array, skills: Array, cds: Dicti
 	if idx < 0:
 		return empty
 	var target: Dictionary = foes[idx]
+	var class_id := int(player_state.get("class_id", 0))
 	var dist: float = player_state.pos.distance_to(target.pos)
-	if dist > AGGRO_RADIUS:
+	if dist > engagement_radius_for_class(class_id):
 		return empty
 	var in_aoe := _count_in_range(player_state.pos, foes, AOE_RADIUS)
 	var skill_id := AutoCombat.pick_skill(
@@ -54,7 +62,7 @@ func player_act(player_state: Dictionary, foes: Array, skills: Array, cds: Dicti
 		player_state.hp = minf(float(player_state.hp_max), float(player_state.hp) + float(heal))
 		cds[skill.id] = _skill_cooldown(skill, player_state)
 		return {"applied": true, "skill_id": skill.id, "target_index": -1, "damage": -heal}
-	var reach := attack_range_for_class(int(player_state.get("class_id", 0)))
+	var reach := attack_range_for_class(class_id)
 	if dist > reach:
 		return empty
 	if skill != null and skill.kind == "aoe":
