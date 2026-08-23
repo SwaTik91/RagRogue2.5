@@ -1,12 +1,12 @@
 extends Node3D
 ## Follow camera: orthographic 2.5D (tilted top-down, RO-style field).
+## `tilt_degrees` = elevation above the ground plane (higher = more top-down).
 
 @export var target_path: NodePath
-@export var follow_height := 520.0
-@export var follow_distance := 480.0
-@export var tilt_degrees := 68.0
-@export var ortho_size := 400.0
-@export var look_at_height := 36.0
+@export var orbit_distance := 380.0
+@export var tilt_degrees := 48.0
+@export var ortho_size := 320.0
+@export var look_at_height := 42.0
 @export var smoothing := 8.0
 
 var _target: Node3D = null
@@ -31,9 +31,9 @@ func _physics_process(delta: float) -> void:
 	if _target == null or not is_instance_valid(_target):
 		return
 	var focus := _target.global_position + Vector3(0.0, look_at_height, 0.0)
-	var tilt := deg_to_rad(tilt_degrees)
-	var back := follow_distance * cos(tilt)
-	var up := follow_height + follow_distance * sin(tilt)
+	var elev := deg_to_rad(clampf(tilt_degrees, 18.0, 72.0))
+	var back := orbit_distance * cos(elev)
+	var up := orbit_distance * sin(elev)
 	var desired := focus + Vector3(0.0, up, back)
 	if smoothing > 0.0 and delta > 0.0:
 		global_position = global_position.lerp(desired, clampf(delta * smoothing, 0.0, 1.0))
