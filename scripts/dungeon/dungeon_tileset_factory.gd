@@ -1,6 +1,6 @@
 class_name DungeonTilesetFactory
 extends RefCounted
-## Procedural RO-style dungeon TileSet (64px cells) for TileMapLayer stacks.
+## Dungeon TileSet — PixelLab Wang tileset when exported, else procedural fallback.
 
 const TILE_SIZE := 64
 const SOURCE_ID := 0
@@ -26,8 +26,164 @@ const TERRAIN_SET := 0
 const TERRAIN_GRASS := 0
 const TERRAIN_PATH := 1
 
+const PIXELLAB_META := "res://assets/art/pixellab/dungeon/meta.json"
+const PIXELLAB_ATLAS := "res://assets/art/pixellab/dungeon/atlas.png"
+
+static var atlas_tree := ATLAS_TREE
+static var atlas_rock := ATLAS_ROCK
+static var atlas_barrel := ATLAS_BARREL
+static var atlas_wall := ATLAS_WALL
+static var grass_variants_runtime: Array[Vector2i] = GRASS_VARIANTS.duplicate()
+
+
+static func grass_variants() -> Array[Vector2i]:
+	return grass_variants_runtime
+
 
 static func make_tileset() -> TileSet:
+	if _pixellab_available():
+		return _make_pixellab_tileset()
+	return _make_procedural_tileset()
+
+
+static func _pixellab_available() -> bool:
+	return ResourceLoader.exists(PIXELLAB_META) and ResourceLoader.exists(PIXELLAB_ATLAS)
+
+
+static func _load_pixellab_meta() -> Dictionary:
+	var text := FileAccess.get_file_as_string(PIXELLAB_META)
+	var parsed: Variant = JSON.parse_string(text)
+	return parsed if parsed is Dictionary else {}
+
+
+static func _make_pixellab_tileset() -> TileSet:
+	var meta := _load_pixellab_meta()
+	var atlas_tex := load(PIXELLAB_ATLAS) as Texture2D
+	if atlas_tex == null:
+		return _make_procedural_tileset()
+	var tile_set := TileSet.new()
+	tile_set.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
+	var source := TileSetAtlasSource.new()
+	source.texture = atlas_tex
+	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
+	var source_id := tile_set.add_source(source, SOURCE_ID)
+	var atlas := tile_set.get_source(source_id) as TileSetAtlasSource
+	var tiles: Array = meta.get("tiles", [])
+	for entry in tiles:
+		if not entry is Dictionary:
+			continue
+		var at: Array = entry.get("atlas", [])
+		if at.size() < 2:
+			continue
+		var coord := Vector2i(int(at[0]), int(at[1]))
+		atlas.create_tile(coord)
+	_register_decor_tiles(atlas, meta.get("decor_atlas", {}))
+	_configure_pixellab_terrains(tile_set, atlas, tiles)
+	_apply_pixellab_decor(meta.get("decor_atlas", {}))
+	_cache_grass_variants(tiles)
+	return tile_set
+
+
+static func _register_decor_tiles(atlas: TileSetAtlasSource, decor: Variant) -> void:
+	if not decor is Dictionary:
+		return
+	for key in decor.keys():
+		var at: Variant = decor[key]
+		if at is Array and at.size() >= 2:
+			var coord := Vector2i(int(at[0]), int(at[1]))
+			if not atlas.has_tile(coord):
+				atlas.create_tile(coord)
+
+
+static func _configure_pixellab_terrains(
+	tile_set: TileSet,
+	atlas: TileSetAtlasSource,
+	tiles: Array,
+) -> void:
+	tile_set.add_terrain_set()
+	tile_set.set_terrain_set_mode(TERRAIN_SET, TileSet.TERRAIN_MODE_MATCH_CORNERS)
+	tile_set.add_terrain(TERRAIN_SET)
+	tile_set.add_terrain(TERRAIN_SET)
+	tile_set.set_terrain_name(TERRAIN_SET, TERRAIN_GRASS, &"grass")
+	tile_set.set_terrain_name(TERRAIN_SET, TERRAIN_PATH, &"path")
+	for entry in tiles:
+		if not entry is Dictionary:
+			continue
+		var at: Array = entry.get("atlas", [])
+		if at.size() < 2:
+			continue
+		var coord := Vector2i(int(at[0]), int(at[1]))
+		var corners: Dictionary = entry.get("corners", {})
+		_paint_corner_terrain(atlas, coord, corners)
+
+
+static func _paint_corner_terrain(atlas: TileSetAtlasSource, coord: Vector2i, corners: Dictionary) -> void:
+	var tile_data := atlas.get_tile_data(coord, 0)
+	if tile_data == null:
+		return
+	tile_data.set_terrain_set(TERRAIN_SET)
+	var nw := _terrain_for_corner(str(corners.get("NW", "lower")))
+	var ne := _terrain_for_corner(str(corners.get("NE", "lower")))
+	var sw := _terrain_for_corner(str(corners.get("SW", "lower")))
+	var se := _terrain_for_corner(str(corners.get("SE", "lower")))
+	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER, nw)
+	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER, ne)
+	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER, sw)
+	tile_data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER, se)
+
+
+static func _terrain_for_corner(corner_val: String) -> int:
+	if corner_val == "upper":
+		return TERRAIN_PATH
+	return TERRAIN_GRASS
+
+
+static func _apply_pixellab_decor(decor: Dictionary) -> void:
+	if decor is Dictionary and not decor.is_empty():
+		if decor.has("tree"):
+			atlas_tree = _vec_from_array(decor["tree"], ATLAS_TREE)
+		if decor.has("rock"):
+			atlas_rock = _vec_from_array(decor["rock"], ATLAS_ROCK)
+		if decor.has("barrel"):
+			atlas_barrel = _vec_from_array(decor["barrel"], ATLAS_BARREL)
+		if decor.has("wall"):
+			atlas_wall = _vec_from_array(decor["wall"], ATLAS_WALL)
+
+
+static func _vec_from_array(at: Variant, fallback: Vector2i) -> Vector2i:
+	if at is Array and at.size() >= 2:
+		return Vector2i(int(at[0]), int(at[1]))
+	return fallback
+
+
+static func _cache_grass_variants(tiles: Array) -> void:
+	var pure: Array[Vector2i] = []
+	for entry in tiles:
+		if not entry is Dictionary:
+			continue
+		var corners: Dictionary = entry.get("corners", {})
+		if not _is_pure_lower(corners):
+			continue
+		var at: Array = entry.get("atlas", [])
+		if at.size() >= 2:
+			pure.append(Vector2i(int(at[0]), int(at[1])))
+	if pure.size() >= 1:
+		grass_variants_runtime = pure.slice(0, mini(4, pure.size()))
+
+
+static func _is_pure_lower(corners: Dictionary) -> bool:
+	for key in ["NW", "NE", "SW", "SE"]:
+		if str(corners.get(key, "lower")) != "lower":
+			return false
+	return true
+
+
+static func _make_procedural_tileset() -> TileSet:
+	atlas_tree = ATLAS_TREE
+	atlas_rock = ATLAS_ROCK
+	atlas_barrel = ATLAS_BARREL
+	atlas_wall = ATLAS_WALL
+	grass_variants_runtime = GRASS_VARIANTS.duplicate()
 	var atlas_tex := _build_atlas_texture()
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
@@ -38,7 +194,7 @@ static func make_tileset() -> TileSet:
 	var atlas := tile_set.get_source(source_id) as TileSetAtlasSource
 	for coord in _all_atlas_coords():
 		atlas.create_tile(coord)
-	_configure_terrains(tile_set, atlas)
+	_configure_side_terrains(tile_set, atlas)
 	return tile_set
 
 
@@ -50,7 +206,7 @@ static func _all_atlas_coords() -> Array[Vector2i]:
 	return out
 
 
-static func _configure_terrains(tile_set: TileSet, atlas: TileSetAtlasSource) -> void:
+static func _configure_side_terrains(tile_set: TileSet, atlas: TileSetAtlasSource) -> void:
 	tile_set.add_terrain_set()
 	tile_set.set_terrain_set_mode(TERRAIN_SET, TileSet.TERRAIN_MODE_MATCH_SIDES)
 	tile_set.add_terrain(TERRAIN_SET)
@@ -58,11 +214,11 @@ static func _configure_terrains(tile_set: TileSet, atlas: TileSetAtlasSource) ->
 	tile_set.set_terrain_name(TERRAIN_SET, TERRAIN_GRASS, &"grass")
 	tile_set.set_terrain_name(TERRAIN_SET, TERRAIN_PATH, &"path")
 	for variant in GRASS_VARIANTS:
-		_paint_terrain(atlas, variant, TERRAIN_GRASS)
-	_paint_terrain(atlas, ATLAS_PATH, TERRAIN_PATH)
+		_paint_side_terrain(atlas, variant, TERRAIN_GRASS)
+	_paint_side_terrain(atlas, ATLAS_PATH, TERRAIN_PATH)
 
 
-static func _paint_terrain(atlas: TileSetAtlasSource, coord: Vector2i, terrain_id: int) -> void:
+static func _paint_side_terrain(atlas: TileSetAtlasSource, coord: Vector2i, terrain_id: int) -> void:
 	var tile_data := atlas.get_tile_data(coord, 0)
 	if tile_data == null:
 		return

@@ -61,7 +61,9 @@ static func _fill_grass(layer: TileMapLayer) -> void:
 	for cell in grass_cells:
 		if rng.randf() > 0.35:
 			continue
-		var variant := DungeonTilesetFactory.GRASS_VARIANTS[rng.randi_range(0, 3)]
+		var variant := DungeonTilesetFactory.grass_variants()[
+			rng.randi_range(0, DungeonTilesetFactory.grass_variants().size() - 1)
+		]
 		layer.set_cell(cell, DungeonTilesetFactory.SOURCE_ID, variant)
 
 
@@ -93,11 +95,11 @@ static func _paint_decor(layer: TileMapLayer) -> void:
 		var cell := layer.local_to_map(world)
 		var atlas: Vector2i
 		if i % 3 == 0:
-			atlas = DungeonTilesetFactory.ATLAS_TREE
+			atlas = DungeonTilesetFactory.atlas_tree
 		elif i % 3 == 1:
-			atlas = DungeonTilesetFactory.ATLAS_ROCK
+			atlas = DungeonTilesetFactory.atlas_rock
 		else:
-			atlas = DungeonTilesetFactory.ATLAS_BARREL
+			atlas = DungeonTilesetFactory.atlas_barrel
 		layer.set_cell(cell, DungeonTilesetFactory.SOURCE_ID, atlas)
 
 
@@ -108,11 +110,11 @@ static func _paint_wall_trim(parent: Node2D, tile_set: TileSet) -> void:
 	var left := ORIGIN_CELL.x - 1
 	var right := ORIGIN_CELL.x + MAP_COLS
 	for x in range(ORIGIN_CELL.x - 1, ORIGIN_CELL.x + MAP_COLS + 1):
-		wall_layer.set_cell(Vector2i(x, top), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.ATLAS_WALL)
-		wall_layer.set_cell(Vector2i(x, bottom), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.ATLAS_WALL)
+		wall_layer.set_cell(Vector2i(x, top), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.atlas_wall)
+		wall_layer.set_cell(Vector2i(x, bottom), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.atlas_wall)
 	for y in range(ORIGIN_CELL.y - 1, ORIGIN_CELL.y + MAP_ROWS + 1):
-		wall_layer.set_cell(Vector2i(left, y), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.ATLAS_WALL)
-		wall_layer.set_cell(Vector2i(right, y), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.ATLAS_WALL)
+		wall_layer.set_cell(Vector2i(left, y), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.atlas_wall)
+		wall_layer.set_cell(Vector2i(right, y), DungeonTilesetFactory.SOURCE_ID, DungeonTilesetFactory.atlas_wall)
 
 
 static func _add_atmosphere(parent: Node2D) -> void:

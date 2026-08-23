@@ -30,6 +30,23 @@ Output frames: `assets/art/anim/{actor}/{down|up|left|right}/{idle|walk|attack|s
 
 Meta: `assets/art/pixellab/{actor}/meta.json`
 
+## Dungeon map tileset (grass + path)
+
+Wang autotile field + decor props via REST:
+
+```bash
+python3 scripts/art/pixellab_tileset_batch.py dungeon
+python3 scripts/art/pixellab_tileset_batch.py dungeon --force
+```
+
+Output:
+
+- `assets/art/pixellab/dungeon/atlas.png` — 4×4 Wang tiles + decor row (64px cells)
+- `assets/art/pixellab/dungeon/meta.json` — corner data for Godot `MATCH_CORNERS` terrain
+- `assets/art/pixellab/dungeon/tiles/*.png` — raw 32px Wang tiles from API
+
+`DungeonTilesetFactory` loads this atlas automatically when present; otherwise procedural fallback.
+
 ## MCP + Cursor
 
 PixelLab exposes a **remote HTTP MCP server** (“Vibe Coding”) so you can generate characters,

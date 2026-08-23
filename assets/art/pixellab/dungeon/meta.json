@@ -1,0 +1,255 @@
+{
+  "tileset_id": "682984e6-ff86-440c-adf9-8f4ecee642dd",
+  "source_tile_size": 32,
+  "game_tile_size": 64,
+  "terrain": {
+    "lower": "grass",
+    "upper": "path"
+  },
+  "tiles": [
+    {
+      "id": "13",
+      "name": "wang_13",
+      "atlas": [
+        2,
+        0
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "upper",
+        "SW": "lower",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "10",
+      "name": "wang_10",
+      "atlas": [
+        1,
+        2
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "lower",
+        "SW": "upper",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "4",
+      "name": "wang_4",
+      "atlas": [
+        1,
+        0
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "upper",
+        "SW": "lower",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "12",
+      "name": "wang_12",
+      "atlas": [
+        3,
+        3
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "upper",
+        "SW": "lower",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "6",
+      "name": "wang_6",
+      "atlas": [
+        2,
+        1
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "upper",
+        "SW": "upper",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "8",
+      "name": "wang_8",
+      "atlas": [
+        1,
+        3
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "lower",
+        "SW": "lower",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "0",
+      "name": "wang_0",
+      "atlas": [
+        3,
+        1
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "lower",
+        "SW": "lower",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "1",
+      "name": "wang_1",
+      "atlas": [
+        1,
+        1
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "lower",
+        "SW": "lower",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "11",
+      "name": "wang_11",
+      "atlas": [
+        3,
+        2
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "lower",
+        "SW": "upper",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "3",
+      "name": "wang_3",
+      "atlas": [
+        2,
+        1
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "lower",
+        "SW": "upper",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "2",
+      "name": "wang_2",
+      "atlas": [
+        3,
+        1
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "lower",
+        "SW": "upper",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "5",
+      "name": "wang_5",
+      "atlas": [
+        1,
+        2
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "upper",
+        "SW": "lower",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "15",
+      "name": "wang_15",
+      "atlas": [
+        2,
+        2
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "upper",
+        "SW": "upper",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "14",
+      "name": "wang_14",
+      "atlas": [
+        1,
+        3
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "upper",
+        "SW": "upper",
+        "SE": "lower"
+      }
+    },
+    {
+      "id": "9",
+      "name": "wang_9",
+      "atlas": [
+        2,
+        3
+      ],
+      "corners": {
+        "NW": "upper",
+        "NE": "lower",
+        "SW": "lower",
+        "SE": "upper"
+      }
+    },
+    {
+      "id": "7",
+      "name": "wang_7",
+      "atlas": [
+        3,
+        2
+      ],
+      "corners": {
+        "NW": "lower",
+        "NE": "upper",
+        "SW": "upper",
+        "SE": "upper"
+      }
+    }
+  ],
+  "decor_atlas": {
+    "tree": [
+      0,
+      4
+    ],
+    "rock": [
+      1,
+      4
+    ],
+    "barrel": [
+      2,
+      4
+    ],
+    "wall": [
+      3,
+      4
+    ]
+  },
+  "atlas_cols": 4,
+  "atlas_rows": 5
+}
