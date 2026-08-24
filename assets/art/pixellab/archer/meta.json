@@ -1,18 +1,20 @@
 {
-  "source": "full-pixflux (idle pixflux + create-character rest)",
-  "character_id": "8c3a8142-467d-4729-b1bd-6f71ae598bb8",
+  "source": "mannequin_state_zip",
+  "character_id": "059aaa76-7fb1-4113-8df3-4367c9a4bbce",
   "actor": "archer",
+  "state_folder": "Idle",
   "pixellab_tag": "Sniper1",
-  "animations": [
-    "idle",
-    "walk",
-    "attack",
-    "skill"
-  ],
-  "directions": [
-    "down",
-    "up",
-    "left",
-    "right"
-  ]
+  "imported_frames": 48,
+  "present": {
+    "idle": ["down", "up", "left", "right"],
+    "walk": ["down"],
+    "attack": ["down"],
+    "skill": ["down"]
+  },
+  "missing_directions": {
+    "walk": ["up", "left", "right"],
+    "attack": ["up", "left", "right"],
+    "skill": ["up", "left", "right"]
+  },
+  "pixellab_task": "assets/art/pixellab/archer/SNIPER1_PIXELLAB_TASK.md"
 }

@@ -599,6 +599,7 @@ MANNEQUIN_STATE_ANIM_PREFIX = {
 	"a_ranged_attack": "skill",
 	"flame": "skill",
 	"crystal": "skill",
+	"skill": "skill",
 	"attack": "attack",
 }
 
@@ -1051,8 +1052,6 @@ def run_actor(actor: str, force: bool = False, phase: str = "all") -> None:
 	for job in jobs:
 		request_animation(cid, job)
 	export_frames(actor, cid)
-	if phase in ("all", "rest") and actor in ("archer", "swordman", "mage"):
-		rotate_south_anims(actor, force=True)
 	if phase in ("all", "rest"):
 		_copy_idle_portrait(actor)
 	print(f"done {actor} phase={phase}", flush=True)
