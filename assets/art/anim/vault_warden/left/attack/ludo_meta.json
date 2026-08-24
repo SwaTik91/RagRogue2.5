@@ -1,0 +1,25 @@
+{
+  "spritesheet_url": "https://storage.googleapis.com/ludo-assets/api/6be8f0f181856a3c66dbf8f6595f5c01.webp",
+  "video_url": "https://storage.googleapis.com/ludo-assets/api/a1b2f601a1e87037b38240e6b34b3ddd.mp4",
+  "individual_frame_urls": [
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-6afc0a41de9753044613a205e6239a48.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-287d43a2d49fc6894c1078e8dceb5ead.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-38b2baea172c32e0e88781e56d46293b.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-ab59db06427aebd967f480934e11fa28.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-cf829a692805d48b96ed1c032988fdb1.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-79774ff3ae28c30c7a7ce01e4cb21489.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-04718de6cfe93e5ad235424d293e0f01.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-ff314b30e9b832338655c02b4a47b675.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-10d43b46a8ec24f4ba1c623cb7227a43.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-e2326f89007c8103b1e89e4125c36ae1.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-67d99636ae7b3e6fe9dac6af5adde1db.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-330caa13327b3a0a1552db0cd6fbc141.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-614b7bfae8e50fe7bf23eb9aba8eba1f.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-61e56fd37e145587fa3c5ea094fc9be8.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-6130d4a187a9f40543feaaa8aaf00de1.webp",
+    "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-573861894b6dbf9d211bdb948b1ceecb.webp"
+  ],
+  "num_frames": 16,
+  "num_cols": 4,
+  "num_rows": 4
+}

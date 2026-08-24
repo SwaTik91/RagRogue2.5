@@ -1,0 +1,53 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/dungeon/archer_visual_3d.gd" id="1_script"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 22.0
+height = 64.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 16.0
+height = 32.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_hood"]
+size = Vector3(36.0, 20.0, 34.0)
+
+[sub_resource type="TorusMesh" id="TorusMesh_bow"]
+inner_radius = 24.0
+outer_radius = 28.0
+rings = 8
+ring_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_string"]
+size = Vector3(2.0, 44.0, 2.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_quiver"]
+size = Vector3(14.0, 32.0, 10.0)
+
+[node name="ArcherVisual3D" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Quiver" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, -16, 58, -14)
+mesh = SubResource("BoxMesh_quiver")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 36, 0)
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 78, 2)
+mesh = SubResource("SphereMesh_head")
+
+[node name="Hood" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 88, 4)
+mesh = SubResource("BoxMesh_hood")
+
+[node name="Bow" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 32, 72, 20)
+mesh = SubResource("TorusMesh_bow")
+
+[node name="BowString" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 72, 22)
+mesh = SubResource("BoxMesh_string")

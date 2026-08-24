@@ -1,0 +1,37 @@
+{
+  "raw_model_url": "https://storage.googleapis.com/ludo-assets/api/3c97bed14a820ad5dc25107a85da07ce.glb",
+  "rigged_model_url": "https://storage.googleapis.com/ludo-assets/api/3d9be3f56504b1ca392b62c5c4b816f4.glb",
+  "animations": {
+    "idle": {
+      "preset_id": "idle_combat",
+      "glb_url": "https://storage.googleapis.com/ludo-assets/api/be9596b44c0abbb6165efa00e65db0f1.glb",
+      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-7939b7d5d392cb9e433de10087ed69f0.mp4",
+      "clip_name": "idle_combat"
+    },
+    "walk": {
+      "preset_id": "walk_forward",
+      "glb_url": "https://storage.googleapis.com/ludo-assets/api/84726aca037e6812085e39920e6726a4.glb",
+      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-eac9bf4360dd01fc539eb76e99d905cf.mp4",
+      "clip_name": "walk_forward"
+    },
+    "attack": {
+      "source": "animate3DModel",
+      "clip_name": "Full Draw",
+      "glb_url": "https://storage.googleapis.com/ludo-assets/api/8c8772627d2157fd38d7a1c5ca155ebc.glb",
+      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-8789583a2e7f53830993b18616f2402b.mp4",
+      "prompt": "left hand holding bow upright, right hand at cheek"
+    },
+    "skill": {
+      "preset_id": "bow_shot_sky",
+      "glb_url": "https://storage.googleapis.com/ludo-assets/api/b7e4e1139d2bc53287b1fbdaa02635b6.glb",
+      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-6f3583b3062bd1f760e6cb1737fe582e.mp4",
+      "clip_name": "bow_shot_sky"
+    },
+    "hit": {
+      "preset_id": "hit_front_heavy",
+      "glb_url": "https://storage.googleapis.com/ludo-assets/api/1302dc94f1349c9fee667e4e92292c94.glb",
+      "preview_url": "https://storage.googleapis.com/ludo-assets/api/6a64c4580ae4d819bcd6fa87-f9b950369a48375c865f2ab0a70b4bfa.mp4",
+      "clip_name": "hit_front_heavy"
+    }
+  }
+}

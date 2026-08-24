@@ -1,0 +1,11 @@
+{
+  "source": "mannequin_state_zip",
+  "character_id": "498da150-1e5c-48af-81be-6d140b331a06",
+  "actor": "angel_mvp",
+  "state_folder": "Idle",
+  "imported_frames": 26,
+  "export_zip": "assets/art/pixellab/angel_mvp/export.zip",
+  "pixellab_status": "completed",
+  "pixellab_anims": ["walk", "attack", "skill"],
+  "note": "south PixelLab anims + up/left/right via --rotate-anims (78 frames)"
+}

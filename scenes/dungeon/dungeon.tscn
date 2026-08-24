@@ -1,0 +1,101 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/dungeon/dungeon_controller.gd" id="1_dc"]
+[ext_resource type="PackedScene" path="res://scenes/dungeon/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/virtual_stick.tscn" id="2_stick"]
+[ext_resource type="Script" path="res://scripts/dungeon/combat_director.gd" id="3_cd"]
+[ext_resource type="Script" path="res://scripts/ui/ui_safe_area_margins.gd" id="4_safe"]
+[ext_resource type="Script" path="res://scripts/ui/god_mode_button.gd" id="5_god"]
+
+[sub_resource type="RectangleShape2D" id="WallH"]
+size = Vector2(4080, 80)
+
+[sub_resource type="RectangleShape2D" id="WallV"]
+size = Vector2(80, 2640)
+
+[node name="Dungeon" type="Node2D"]
+script = ExtResource("1_dc")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="North" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, -1280)
+shape = SubResource("WallH")
+
+[node name="South" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, 1280)
+shape = SubResource("WallH")
+
+[node name="West" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-2000, 0)
+shape = SubResource("WallV")
+
+[node name="East" type="CollisionShape2D" parent="Walls"]
+position = Vector2(2000, 0)
+shape = SubResource("WallV")
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+
+[node name="CombatDirector" type="Node" parent="."]
+script = ExtResource("3_cd")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="SafeArea" type="MarginContainer" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_safe")
+
+[node name="HudRoot" type="Control" parent="HUD/SafeArea"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HpLabel" type="Label" parent="HUD/SafeArea/HudRoot"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 320.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 22
+text = "HP --/--  v0.1.33"
+
+[node name="GodModeButton" type="Button" parent="HUD/SafeArea/HudRoot"]
+layout_mode = 0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 52.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+toggle_mode = true
+text = "GOD"
+script = ExtResource("5_god")
+
+[node name="BannerLabel" type="Label" parent="HUD/SafeArea/HudRoot"]
+layout_mode = 0
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -220.0
+offset_top = 16.0
+offset_right = 220.0
+offset_bottom = 52.0
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+
+[node name="VirtualStick" parent="HUD" instance=ExtResource("2_stick")]

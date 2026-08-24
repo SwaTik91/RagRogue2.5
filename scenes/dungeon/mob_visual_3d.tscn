@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/dungeon/mob_visual_3d.gd" id="1_script"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_core"]
+radius = 22.0
+height = 44.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_accent"]
+radius = 14.0
+height = 28.0
+
+[node name="MobVisual3D" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Core" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 34, 0)
+mesh = SubResource("SphereMesh_core")
+
+[node name="Accent" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 52, 10)
+mesh = SubResource("SphereMesh_accent")
